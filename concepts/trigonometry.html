@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigonometry Unit Circle · 3D Trig Lab</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', 'Arial', sans-serif;
+            background-color: black;
+        }
+        #hologram-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 20, 40, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid #66ccff;
+            border-radius: 60px;
+            padding: 16px 40px;
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px #66ccff, 0 0 60px #3366ff;
+            box-shadow: 0 0 60px #66ccff88;
+            z-index: 20;
+            border-left: 6px solid cyan;
+            white-space: nowrap;
+        }
+        #angle-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(10, 10, 30, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid #ffaa66;
+            border-radius: 50px;
+            padding: 22px 35px;
+            width: 280px;
+            color: white;
+            box-shadow: 0 0 80px #ffaa6688;
+            z-index: 30;
+            border-bottom: 4px solid orange;
+            pointer-events: auto;
+        }
+        #angle-panel h3 {
+            margin: 0 0 15px 0;
+            font-weight: 300;
+            font-size: 1.8rem;
+            color: #ffcc88;
+            text-align: center;
+        }
+        .slider-group {
+            margin: 25px 0;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #aaf;
+            font-size: 1.2rem;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #3366ff, #ff44aa);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 30px cyan;
+            border: 3px solid #0ff;
+            cursor: pointer;
+        }
+        .trig-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+        .value-box {
+            text-align: center;
+            background: rgba(0,30,50,0.6);
+            padding: 10px;
+            border-radius: 20px;
+            flex: 1;
+            margin: 0 5px;
+        }
+        .value-label {
+            color: #9cf;
+            font-size: 0.9rem;
+        }
+        .value-number {
+            font-size: 1.6rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            color: #acf;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #9cf;
+            z-index: 40;
+            font-size: 1rem;
+        }
+        #graph-canvas-container {
+            position: absolute;
+            top: 120px;
+            right: 30px;
+            width: 320px;
+            height: 180px;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 0 40px #44aaff;
+            border: 2px solid #88ccff;
+            background: rgba(0,5,15,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 25;
+        }
+        #sine-graph {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="hologram-title">📐 UNIT CIRCLE · 3D TRIG LAB</div>
+
+    <div id="angle-panel">
+        <h3>⚡ ANGLE CONTROL</h3>
+        <div class="slider-group">
+            <label>θ <span id="angle-display">45°</span></label>
+            <input type="range" id="angle-slider" min="0" max="360" value="45" step="1">
+        </div>
+        <div class="trig-values">
+            <div class="value-box"><span class="value-label">sin</span><span id="sin-value" class="value-number">0.71</span></div>
+            <div class="value-box"><span class="value-label">cos</span><span id="cos-value" class="value-number">0.71</span></div>
+            <div class="value-box"><span class="value-label">tan</span><span id="tan-value" class="value-number">1.00</span></div>
+        </div>
+    </div>
+
+    <div id="graph-canvas-container">
+        <canvas id="sine-graph" width="400" height="200"></canvas>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · TRIGONOMETRY LAB</div>
+
+    <!-- Three.js imports -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x070b1a);
+        scene.fog = new THREE.FogExp2(0x070b1a, 0.003);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(8, 4, 14);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.7;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.maxDistance = 25;
+
+        // --- POST PROCESSING (glow) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.3, 0.8);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 0.4;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- LIGHTING ---
+        const ambient = new THREE.AmbientLight(0x40406b);
+        scene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xaaccff, 1.2);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const pointLight1 = new THREE.PointLight(0x4466ff, 0.9, 30);
+        pointLight1.position.set(-4, 3, 6);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0xff66aa, 0.7, 30);
+        pointLight2.position.set(4, 2, -8);
+        scene.add(pointLight2);
+
+        // --- BACKGROUND: floating grid and particles ---
+        const gridHelper = new THREE.GridHelper(20, 30, 0x44aaff, 0x224488);
+        gridHelper.position.y = -1;
+        gridHelper.material.opacity = 0.25;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // floating particles
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 400;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i=0; i<particleCount; i++) {
+            posArray[i*3] = (Math.random()-0.5)*40;
+            posArray[i*3+1] = (Math.random()-0.5)*20;
+            posArray[i*3+2] = (Math.random()-0.5)*40;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- UNIT CIRCLE CONSTRUCTION ---
+        const circleGroup = new THREE.Group();
+        
+        // Main circle (transparent)
+        const circleRadius = 3.0;
+        const circlePoints = [];
+        const segments = 128;
+        for (let i = 0; i <= segments; i++) {
+            const theta = (i / segments) * Math.PI * 2;
+            const x = Math.cos(theta) * circleRadius;
+            const z = Math.sin(theta) * circleRadius;
+            circlePoints.push(new THREE.Vector3(x, 0, z));
+        }
+        const circleGeo = new THREE.BufferGeometry().setFromPoints(circlePoints);
+        const circleMat = new THREE.LineBasicMaterial({ color: 0x66ccff });
+        const circleLine = new THREE.LineLoop(circleGeo, circleMat);
+        circleGroup.add(circleLine);
+
+        // Axes (X and Y)
+        const axisMat = new THREE.LineBasicMaterial({ color: 0x8888ff });
+        const xAxisPoints = [new THREE.Vector3(-4, 0, 0), new THREE.Vector3(4, 0, 0)];
+        const xAxisGeo = new THREE.BufferGeometry().setFromPoints(xAxisPoints);
+        const xAxis = new THREE.Line(xAxisGeo, axisMat);
+        circleGroup.add(xAxis);
+
+        const zAxisPoints = [new THREE.Vector3(0, 0, -4), new THREE.Vector3(0, 0, 4)];
+        const zAxisGeo = new THREE.BufferGeometry().setFromPoints(zAxisPoints);
+        const zAxis = new THREE.Line(zAxisGeo, axisMat);
+        circleGroup.add(zAxis);
+
+        // Radius arm (rotating)
+        const radiusLength = circleRadius;
+        const radiusGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(radiusLength, 0, 0)]);
+        const radiusMat = new THREE.LineBasicMaterial({ color: 0xffaa33 });
+        const radiusLine = new THREE.Line(radiusGeo, radiusMat);
+        circleGroup.add(radiusLine);
+
+        // Terminal point (glowing sphere)
+        const pointGeo = new THREE.SphereGeometry(0.25, 16, 16);
+        const pointMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0x442200 });
+        const terminalPoint = new THREE.Mesh(pointGeo, pointMat);
+        circleGroup.add(terminalPoint);
+
+        // Sine projection (vertical line)
+        const sineLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        const sineLineMat = new THREE.LineBasicMaterial({ color: 0xff5577 });
+        const sineLine = new THREE.Line(sineLineGeo, sineLineMat);
+        circleGroup.add(sineLine);
+
+        // Cosine projection (horizontal line)
+        const cosineLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        const cosineLineMat = new THREE.LineBasicMaterial({ color: 0x77aaff });
+        const cosineLine = new THREE.Line(cosineLineGeo, cosineLineMat);
+        circleGroup.add(cosineLine);
+
+        // Tangent line (drawn from (1,0) outward along tangent)
+        const tangentLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        const tangentLineMat = new THREE.LineBasicMaterial({ color: 0xaa88ff });
+        const tangentLine = new THREE.Line(tangentLineGeo, tangentLineMat);
+        circleGroup.add(tangentLine);
+
+        // Angle arc (glowing)
+        const arcPoints = [];
+        const arcSegments = 32;
+        for (let i = 0; i <= arcSegments; i++) {
+            const theta = (i / arcSegments) * Math.PI/4; // will update dynamically
+            const x = Math.cos(theta) * 1.2;
+            const z = Math.sin(theta) * 1.2;
+            arcPoints.push(new THREE.Vector3(x, 0, z));
+        }
+        const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPoints);
+        const arcMat = new THREE.LineBasicMaterial({ color: 0xffaa44 });
+        const arcLine = new THREE.Line(arcGeo, arcMat);
+        circleGroup.add(arcLine);
+
+        scene.add(circleGroup);
+
+        // --- SINE WAVE GRAPH (2D canvas) ---
+        const canvas = document.getElementById('sine-graph');
+        const ctx = canvas.getContext('2d');
+
+        function drawSineWave(angleDeg) {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            
+            // background
+            ctx.fillStyle = '#0a0a20';
+            ctx.fillRect(0, 0, w, h);
+            
+            // grid
+            ctx.strokeStyle = '#335588';
+            ctx.lineWidth = 0.5;
+            for (let i=0; i<=4; i++) {
+                let y = i * h/4;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.strokeStyle = '#335588';
+                ctx.stroke();
+            }
+            
+            // draw sine wave (0 to 2pi)
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff5577';
+            ctx.lineWidth = 3;
+            for (let x=0; x<w; x++) {
+                let t = (x / w) * Math.PI * 2; // 0 to 2pi
+                let y = h/2 - Math.sin(t) * (h/2 - 10);
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // draw cosine dashed
+            ctx.beginPath();
+            ctx.strokeStyle = '#77aaff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]);
+            for (let x=0; x<w; x++) {
+                let t = (x / w) * Math.PI * 2;
+                let y = h/2 - Math.cos(t) * (h/2 - 10);
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // vertical marker at current angle (radians)
+            let angleRad = angleDeg * Math.PI/180;
+            let markerX = (angleRad / (Math.PI*2)) * w;
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffff88';
+            ctx.lineWidth = 2;
+            ctx.moveTo(markerX, 0);
+            ctx.lineTo(markerX, h);
+            ctx.stroke();
+        }
+
+        // --- SLIDER AND UPDATE LOGIC ---
+        const slider = document.getElementById('angle-slider');
+        const angleDisplay = document.getElementById('angle-display');
+        const sinValue = document.getElementById('sin-value');
+        const cosValue = document.getElementById('cos-value');
+        const tanValue = document.getElementById('tan-value');
+
+        function updateAngle() {
+            const angleDeg = parseInt(slider.value);
+            const angleRad = angleDeg * Math.PI / 180;
+            angleDisplay.textContent = angleDeg + '°';
+            
+            const s = Math.sin(angleRad);
+            const c = Math.cos(angleRad);
+            const t = Math.tan(angleRad);
+            sinValue.textContent = s.toFixed(2);
+            cosValue.textContent = c.toFixed(2);
+            tanValue.textContent = (Math.abs(t) > 10 ? '∞' : t.toFixed(2));
+
+            // Update 3D elements
+            // terminal point position
+            const x = circleRadius * c;
+            const z = circleRadius * s;
+            terminalPoint.position.set(x, 0, z);
+
+            // rotate radius line
+            radiusLine.geometry.dispose();
+            radiusLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(x, 0, z)]);
+
+            // sine projection (vertical line from point to z-axis)
+            sineLine.geometry.dispose();
+            sineLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, z), new THREE.Vector3(x, 0, z)]);
+
+            // cosine projection (horizontal line from point to x-axis)
+            cosineLine.geometry.dispose();
+            cosineLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, 0, z)]);
+
+            // tangent line: from (1,0) to (1, tan) but in 3D coordinates
+            if (Math.abs(c) > 0.01) {
+                const tanX = circleRadius;
+                const tanZ = circleRadius * s / c;
+                tangentLine.geometry.dispose();
+                tangentLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(circleRadius, 0, 0), new THREE.Vector3(circleRadius, 0, tanZ)]);
+            } else {
+                tangentLine.geometry.dispose();
+                tangentLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+            }
+
+            // angle arc
+            const arcSegments = 32;
+            const arcPoints = [];
+            for (let i = 0; i <= arcSegments; i++) {
+                const theta = (i / arcSegments) * angleRad;
+                const ax = Math.cos(theta) * 1.2;
+                const az = Math.sin(theta) * 1.2;
+                arcPoints.push(new THREE.Vector3(ax, 0, az));
+            }
+            arcLine.geometry.dispose();
+            arcLine.geometry = new THREE.BufferGeometry().setFromPoints(arcPoints);
+
+            // update 2D graph
+            drawSineWave(angleDeg);
+        }
+
+        slider.addEventListener('input', updateAngle);
+        updateAngle(); // initial
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            composer.render();
+        }
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('Trig lab ready');
+    </script>
+</body>
+</html>
