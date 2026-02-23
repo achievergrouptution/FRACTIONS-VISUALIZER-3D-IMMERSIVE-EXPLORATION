@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futuristic 3D Fraction World | Neon Math Lab</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'Arial', sans-serif; }
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 10, 25, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            border-radius: 24px;
+            padding: 20px 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,20,40,0.8), 0 0 20px rgba(0,255,255,0.3);
+            z-index: 10;
+            pointer-events: none;
+        }
+        #info-panel h1 {
+            margin: 0 0 8px 0;
+            font-weight: 400;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px cyan;
+            color: #aaf0ff;
+        }
+        #info-panel .sub {
+            margin: 0 0 20px 0;
+            opacity: 0.8;
+            font-style: italic;
+            border-left: 2px solid cyan;
+            padding-left: 15px;
+        }
+        #sliders {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            pointer-events: auto;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 180px;
+        }
+        .slider-container label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #9ad0ff;
+        }
+        .slider-container input {
+            width: 100%;
+            cursor: pointer;
+            height: 8px;
+            background: linear-gradient(90deg, #00a6ff, #ae00ff);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider-container input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #0ff;
+            border: 2px solid #0cf;
+        }
+        .value-badge {
+            display: inline-block;
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid cyan;
+            border-radius: 40px;
+            padding: 6px 18px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 0 8px cyan;
+            backdrop-filter: blur(4px);
+        }
+        #decimal-display {
+            font-size: 1.6rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 15px;
+        }
+        #number-line-container {
+            margin-top: 15px;
+            height: 60px;
+            width: 100%;
+            position: relative;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+            border: 1px solid #2f6f9f;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            pointer-events: auto;
+        }
+        #number-line-canvas {
+            width: 100%;
+            height: 60px;
+            display: block;
+            cursor: pointer;
+        }
+        .glass-panel {
+            background: rgba(5, 5, 20, 0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            padding: 15px;
+        }
+        #hover-stats {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 20, 40, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #0ff;
+            border-radius: 30px;
+            padding: 15px 30px;
+            color: #b5ffff;
+            font-size: 1.2rem;
+            box-shadow: 0 0 30px rgba(0,255,255,0.3);
+            z-index: 10;
+            pointer-events: none;
+            text-align: center;
+        }
+        #footer-credit {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #88ddff;
+            text-shadow: 0 0 8px cyan;
+            border-top: 1px solid rgba(0,255,255,0.3);
+            padding-top: 6px;
+        }
+        .glow-text { text-shadow: 0 0 10px cyan; }
+        .fraction { font-size: 2rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div id="info-panel">
+        <h1>⚛️ FRACTION LAB <span style="font-size:1rem; margin-left:15px; opacity:0.7;">[immersive 3D]</span></h1>
+        <div class="sub">adjust sliders → watch objects divide · hover for glow · feel the math</div>
+        <div id="sliders">
+            <div class="slider-container">
+                <label>🔵 NUMERATOR <span style="color:#0ff;" id="num-val">3</span></label>
+                <input type="range" id="numerator" min="1" max="8" value="3" step="1">
+            </div>
+            <div class="slider-container">
+                <label>🟣 DENOMINATOR <span style="color:#f0f;" id="den-val">5</span></label>
+                <input type="range" id="denominator" min="1" max="8" value="5" step="1">
+            </div>
+            <div style="display: flex; align-items: center;">
+                <span class="value-badge" id="frac-display">3/5</span>
+                <span style="margin:0 10px;">=</span>
+                <span id="decimal-display">0.600</span>
+            </div>
+        </div>
+        <div id="number-line-container" class="glass-panel">
+            <canvas id="number-line-canvas" width="600" height="60"></canvas>
+        </div>
+    </div>
+    <div id="hover-stats">
+        <span id="hover-label">✨ hover over a piece</span> <span id="hover-value" class="glow-text">—</span>
+        <div id="footer-credit">© 2026 ACHIEVER GROUP TUTIONS</div>
+    </div>
+
+    <!-- Include Three.js core and addons -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+        import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+        import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+
+        // --- SETUP SCENE ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        scene.fog = new THREE.FogExp2(0x050510, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(12, 6, 18);
+        camera.lookAt(0, 2, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.5;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.minDistance = 5;
+        controls.maxDistance = 35;
+
+        // --- POST PROCESSING (glow + cinematic) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 0.5;
+
+        const filmPass = new FilmPass(0.35, 0.5, 2048, false);
+        filmPass.renderToScreen = true; // will be last
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+        composer.addPass(filmPass);
+
+        // FXAA for cleaner edges
+        const effectFXAA = new ShaderPass(FXAAShader);
+        effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+        composer.addPass(effectFXAA);
+
+        // --- LIGHTING (cinematic) ---
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xaaccff, 1);
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        const pointLight1 = new THREE.PointLight(0x4466ff, 1, 30);
+        pointLight1.position.set(-3, 5, 5);
+        scene.add(pointLight1);
+        
+        const pointLight2 = new THREE.PointLight(0xff44aa, 0.8, 30);
+        pointLight2.position.set(5, 3, -5);
+        scene.add(pointLight2);
+
+        // Neon grid floor (soft, futuristic)
+        const gridHelper = new THREE.GridHelper(40, 40, 0x00ffff, 0x3366aa);
+        gridHelper.position.y = -0.01;
+        gridHelper.material.opacity = 0.25;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // Add some floating particles (glow effects)
+        const particleGeometry = new THREE.BufferGeometry();
+        const particleCount = 800;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            posArray[i*3] = (Math.random() - 0.5) * 70;
+            posArray[i*3+1] = (Math.random() * 15) + 2;
+            posArray[i*3+2] = (Math.random() - 0.5) * 70;
+        }
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.12, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particles);
+
+        // Floating sci-fi orbs (ambience)
+        for (let i = 0; i < 8; i++) {
+            const sphereGeo = new THREE.SphereGeometry(0.15 + Math.random()*0.2, 8, 8);
+            const sphereMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x224488 });
+            const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+            sphere.position.set((Math.random()-0.5)*20, Math.random()*7, (Math.random()-0.5)*20);
+            scene.add(sphere);
+        }
+
+        // --- FRACTION OBJECTS (interactive) ---
+        // We'll create 3 objects: pizza (circle sectors), chocolate bar (rows), pie chart (full circle)
+        // They will update based on sliders.
+
+        // Groups to hold dynamic meshes
+        const pizzaGroup = new THREE.Group();
+        pizzaGroup.position.set(-4, 2.5, -2);
+        scene.add(pizzaGroup);
+
+        const chocolateGroup = new THREE.Group();
+        chocolateGroup.position.set(4, 1.8, 1);
+        scene.add(chocolateGroup);
+
+        const pieGroup = new THREE.Group();
+        pieGroup.position.set(0, 4, -4);
+        scene.add(pieGroup);
+
+        // Store references for updates
+        let pizzaSlices = [];
+        let chocolateBars = [];
+        let pieSlices = [];
+
+        // Materials
+        const neonRed = new THREE.MeshStandardMaterial({ color: 0xff3366, emissive: 0x440000 });
+        const neonBlue = new THREE.MeshStandardMaterial({ color: 0x33ccff, emissive: 0x003366 });
+        const neonGreen = new THREE.MeshStandardMaterial({ color: 0x88ff88, emissive: 0x224422 });
+        const neonYellow = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 });
+        const hoverMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x88aaff }); // for highlight
+
+        // --- Helper to create pizza slice (cone-like segment) but we use extruded shape? Simpler: use cylinder segments with rotation.
+        function createPizzaSlice(angleStart, angleEnd, radius=2.5, depth=0.4, color=0xff8844) {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            shape.lineTo(radius * Math.cos(angleStart), radius * Math.sin(angleStart));
+            const steps = 8;
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                const ang = angleStart + t * (angleEnd - angleStart);
+                shape.lineTo(radius * Math.cos(ang), radius * Math.sin(ang));
+            }
+            shape.lineTo(0, 0);
+            
+            const extrudeSettings = {
+                depth: depth,
+                bevelEnabled: true,
+                bevelSegments: 2,
+                bevelSize: 0.05,
+                bevelThickness: 0.05
+            };
+            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            const material = new THREE.MeshStandardMaterial({ color: color, emissive: 0x331100 });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = -Math.PI / 2; // lay flat
+            mesh.rotation.z = 0; 
+            mesh.castShadow = true;
+            mesh.receiveShadow = false;
+            return mesh;
+        }
+
+        function createChocolatePiece(width, height, depth, color, emissive) {
+            const geo = new THREE.BoxGeometry(width, height, depth);
+            const mat = new THREE.MeshStandardMaterial({ color, emissive });
+            return new THREE.Mesh(geo, mat);
+        }
+
+        function createPieSlice(angleStart, angleEnd, radius=2.2, height=0.5, color=0xaa88ff) {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            shape.lineTo(radius * Math.cos(angleStart), radius * Math.sin(angleStart));
+            shape.absarc(0, 0, radius, angleStart, angleEnd, false);
+            shape.lineTo(0, 0);
+            
+            const extrudeSettings = {
+                depth: height,
+                bevelEnabled: true,
+                bevelSegments: 2,
+                bevelSize: 0.03,
+                bevelThickness: 0.03
+            };
+            const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            const mat = new THREE.MeshStandardMaterial({ color, emissive: 0x332244 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.rotation.z = 0;
+            return mesh;
+        }
+
+        // --- INIT OBJECTS (default 3/5) ---
+        function buildPizza(num, den) {
+            pizzaGroup.clear();
+            pizzaSlices = [];
+            const angleStep = (Math.PI * 2) / den;
+            for (let i = 0; i < den; i++) {
+                const start = i * angleStep;
+                const end = (i + 1) * angleStep;
+                const color = i < num ? 0xff8833 : 0x443322;
+                const emissive = i < num ? 0x552200 : 0x111111;
+                const slice = createPizzaSlice(start, end, 2.5, 0.3, color);
+                slice.userData = { fractionIndex: i, active: i < num };
+                slice.material.emissive.setHex(emissive);
+                slice.position.y = 0;
+                pizzaGroup.add(slice);
+                pizzaSlices.push(slice);
+            }
+        }
+
+        function buildChocolate(num, den) {
+            chocolateGroup.clear();
+            chocolateBars = [];
+            const totalWidth = 5.0;
+            const pieceWidth = totalWidth / den;
+            for (let i = 0; i < den; i++) {
+                const active = i < num;
+                const color = active ? 0xaa66cc : 0x332244;
+                const emissive = active ? 0x331144 : 0x111122;
+                const piece = createChocolatePiece(pieceWidth * 0.9, 0.8, 1.2, color, emissive);
+                piece.position.x = (i - (den-1)/2) * pieceWidth;
+                piece.position.y = 0.4;
+                piece.userData = { active, index: i };
+                chocolateGroup.add(piece);
+                chocolateBars.push(piece);
+            }
+        }
+
+        function buildPie(num, den) {
+            pieGroup.clear();
+            pieSlices = [];
+            const angleStep = (Math.PI * 2) / den;
+            for (let i = 0; i < den; i++) {
+                const start = i * angleStep;
+                const end = (i + 1) * angleStep;
+                const active = i < num;
+                const color = active ? 0x66ccff : 0x224466;
+                const slice = createPieSlice(start, end, 2.0, 0.4, color);
+                slice.userData = { active, index: i };
+                slice.material.emissive.setHex(active ? 0x113366 : 0x112233);
+                pieGroup.add(slice);
+                pieSlices.push(slice);
+            }
+        }
+
+        // initial
+        let currentNum = 3;
+        let currentDen = 5;
+        buildPizza(currentNum, currentDen);
+        buildChocolate(currentNum, currentDen);
+        buildPie(currentNum, currentDen);
+
+        // --- UI ELEMENTS ---
+        const numSlider = document.getElementById('numerator');
+        const denSlider = document.getElementById('denominator');
+        const numVal = document.getElementById('num-val');
+        const denVal = document.getElementById('den-val');
+        const fracDisplay = document.getElementById('frac-display');
+        const decimalDisplay = document.getElementById('decimal-display');
+        const hoverValue = document.getElementById('hover-value');
+        const canvasLine = document.getElementById('number-line-canvas');
+        const ctx = canvasLine.getContext('2d');
+
+        function updateFromSliders() {
+            const n = parseInt(numSlider.value);
+            const d = parseInt(denSlider.value);
+            if (n > d) numSlider.value = d; // clamp
+            const num = Math.min(n, d);
+            const den = d;
+            currentNum = num;
+            currentDen = den;
+            
+            numVal.textContent = num;
+            denVal.textContent = den;
+            fracDisplay.textContent = `${num}/${den}`;
+            const dec = num / den;
+            decimalDisplay.textContent = dec.toFixed(3);
+
+            // Update 3D objects
+            buildPizza(num, den);
+            buildChocolate(num, den);
+            buildPie(num, den);
+            
+            drawNumberLine(num, den);
+        }
+
+        numSlider.addEventListener('input', updateFromSliders);
+        denSlider.addEventListener('input', (e) => {
+            if (parseInt(numSlider.value) > parseInt(e.target.value)) {
+                numSlider.value = e.target.value;
+            }
+            updateFromSliders();
+        });
+
+        // Number line drawing with "zoom effect" (dynamic range)
+        function drawNumberLine(num, den) {
+            const w = 600, h = 60;
+            ctx.clearRect(0, 0, w, h);
+            
+            // Background
+            const grad = ctx.createLinearGradient(0, 0, w, 0);
+            grad.addColorStop(0, '#001122');
+            grad.addColorStop(1, '#112233');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Draw tick marks
+            ctx.strokeStyle = '#44ccff';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#0ff';
+            ctx.shadowBlur = 10;
+            
+            const value = num / den;
+            const centerX = value * w;
+            
+            // Draw glow line at fraction point
+            ctx.beginPath();
+            ctx.moveTo(centerX, 5);
+            ctx.lineTo(centerX, h-5);
+            ctx.strokeStyle = '#ffff88';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Draw 0 and 1 markers
+            ctx.shadowBlur = 5;
+            ctx.font = 'bold 14px monospace';
+            ctx.fillStyle = '#aaddff';
+            ctx.fillText('0', 10, 25);
+            ctx.fillText('1', w-30, 25);
+            
+            // Small ticks
+            ctx.strokeStyle = '#3388ff';
+            ctx.lineWidth = 1;
+            for (let i=1; i<den; i++) {
+                let x = (i/den) * w;
+                ctx.beginPath();
+                ctx.moveTo(x, h-15);
+                ctx.lineTo(x, h-5);
+                ctx.strokeStyle = '#44aaff';
+                ctx.stroke();
+            }
+            
+            // Zoom effect: draw a translucent circle that scales near point? Not needed but add a glow
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            ctx.arc(centerX, h/2, 20, 0, 2*Math.PI);
+            ctx.fillStyle = 'rgba(255,255,200,0.15)';
+            ctx.fill();
+            
+            // Reset shadow
+            ctx.shadowBlur = 0;
+        }
+        
+        // Hover interaction (raycaster)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        renderer.domElement.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+        });
+
+        // Audio simulation (subtle synth) - not actual sound but we can create oscillator? just visual vibe.
+        // (We skip actual WebAudio to avoid autoplay restrictions; imagine immersive sound)
+
+        // Animation loop
+        let clock = new THREE.Clock();
+
+        function animate() {
+            const delta = clock.getDelta();
+            
+            // Update hover
+            raycaster.setFromCamera(mouse, camera);
+            const allMeshes = [...pizzaSlices, ...chocolateBars, ...pieSlices];
+            const intersects = raycaster.intersectObjects(allMeshes);
+            
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                if (hit.userData.active !== undefined) {
+                    const active = hit.userData.active ? 'ON' : 'off';
+                    hoverValue.textContent = `🍕 ${active} | index: ${hit.userData.index} ${hit.userData.active ? '⚡' : '◯'}`;
+                } else {
+                    hoverValue.textContent = `✨ piece`;
+                }
+                // Temporarily scale up? (glow effect)
+                intersects.forEach(i => {
+                    i.object.scale.set(1.05, 1.05, 1.05);
+                });
+            } else {
+                hoverValue.textContent = '—';
+            }
+            // Reset scales for non-hovered (brutal but simple)
+            allMeshes.forEach(m => m.scale.set(1,1,1));
+
+            // Auto-rotate via controls
+            controls.update();
+
+            // subtle floating animation for objects
+            const time = Date.now() * 0.001;
+            pizzaGroup.rotation.y += 0.001;
+            pieGroup.rotation.y += 0.0005;
+            chocolateGroup.position.y = 1.8 + Math.sin(time*0.8)*0.1;
+
+            // Render via composer
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Initial draw
+        drawNumberLine(currentNum, currentDen);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
+            canvasLine.width = 600; // keep fixed
+            canvasLine.height = 60;
+            drawNumberLine(currentNum, currentDen);
+        });
+
+        // Make canvas interactive to show zoom effect (click on number line sets fraction?)
+        canvasLine.addEventListener('click', (e) => {
+            const rect = canvasLine.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const frac = x / rect.width;
+            const newNum = Math.round(frac * currentDen);
+            numSlider.value = Math.min(currentDen, Math.max(1, newNum));
+            updateFromSliders();
+        });
+
+        // Additional glow: add small floating orbs near objects
+        const glowParticlesGeo = new THREE.BufferGeometry();
+        const gpPos = [];
+        for (let i=0; i<50; i++) {
+            gpPos.push((Math.random()-0.5)*8, Math.random()*5, (Math.random()-0.5)*8);
+        }
+        glowParticlesGeo.setAttribute('position', new THREE.Float32BufferAttribute(gpPos, 3));
+        const gpMat = new THREE.PointsMaterial({ color: 0x88ccff, size: 0.1, blending: THREE.AdditiveBlending });
+        const gp = new THREE.Points(glowParticlesGeo, gpMat);
+        scene.add(gp);
+        
+        console.log('Fraction world ready');
+    </script>
+</body>
+</html>
