@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Heart · 3D Medical Hologram</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background-color: black;
+        }
+        #title-card {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 15, 30, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #ff3366;
+            border-radius: 40px;
+            padding: 16px 32px;
+            color: white;
+            box-shadow: 0 0 40px #ff336688;
+            z-index: 20;
+            pointer-events: none;
+            border-left: 5px solid #ff5577;
+        }
+        #title-card h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px #ff5577;
+        }
+        #title-card .sub {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            color: #ffcccc;
+        }
+        #marker-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 25, 40, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid #44ddff;
+            border-radius: 30px;
+            padding: 22px 25px;
+            color: #e0f0ff;
+            width: 260px;
+            box-shadow: 0 0 50px #44ddffaa;
+            z-index: 25;
+            pointer-events: none;
+        }
+        #marker-panel h3 {
+            margin: 0 0 15px 0;
+            font-weight: 300;
+            color: #88eeff;
+            text-align: center;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #3a6d8c;
+            padding-bottom: 8px;
+        }
+        .marker-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .marker-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+        }
+        .marker-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px currentColor;
+        }
+        .marker-dot.red { background: #ff3355; box-shadow: 0 0 20px #ff3355; }
+        .marker-dot.blue { background: #33aaff; box-shadow: 0 0 20px #33aaff; }
+        .marker-dot.green { background: #88ff88; box-shadow: 0 0 20px #88ff88; }
+        .marker-dot.purple { background: #cc88ff; box-shadow: 0 0 20px #cc88ff; }
+        .marker-dot.orange { background: #ffaa44; box-shadow: 0 0 20px #ffaa44; }
+
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #9cf;
+            background: rgba(0, 10, 20, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #5cf;
+            z-index: 30;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+        #heart-sound-toggle {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(40, 0, 20, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff6688;
+            border-radius: 60px;
+            padding: 15px 25px;
+            color: #ffaabb;
+            font-size: 1.1rem;
+            box-shadow: 0 0 30px #ff4466;
+            z-index: 35;
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            transition: 0.2s;
+        }
+        #heart-sound-toggle:hover {
+            background: #ff336688;
+            color: white;
+            box-shadow: 0 0 50px #ff3366;
+        }
+        .zoom-hint {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            color: #aaf;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 30px;
+            border: 1px solid #88ccff;
+        }
+    </style>
+</head>
+<body>
+    <div id="title-card">
+        <h1>⚕️ HUMAN HEART · HOLOGRAM CHAMBER</h1>
+        <div class="sub">hyper-realistic 3D · blood flow · valves · labeled</div>
+    </div>
+    <div id="marker-panel">
+        <h3>🧬 ANATOMICAL MARKERS</h3>
+        <div class="marker-list">
+            <div class="marker-item"><span class="marker-dot red"></span> Right atrium (deoxygenated)</div>
+            <div class="marker-item"><span class="marker-dot blue"></span> Left ventricle (oxygenated)</div>
+            <div class="marker-item"><span class="marker-dot green"></span> Aorta</div>
+            <div class="marker-item"><span class="marker-dot purple"></span> Pulmonary artery</div>
+            <div class="marker-item"><span class="marker-dot orange"></span> Mitral valve</div>
+        </div>
+        <p style="font-size:0.85rem; margin-top:18px; color:#aac; text-align:center;">✧ rotate · zoom inside · watch valves ✧</p>
+    </div>
+    <div id="heart-sound-toggle">🔊 HEARTBEAT (ON)</div>
+    <div class="zoom-hint">⛶ scroll to zoom into chambers</div>
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · CARDIAC HOLOGRAM</div>
+
+    <!-- Three.js and dependencies -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+        
+        // --- SCENE ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050714);
+        scene.fog = new THREE.FogExp2(0x050714, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(8, 4, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.7;
+        renderer.shadowMap.enabled = false; // not needed
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+        controls.enableZoom = true;
+        controls.maxDistance = 25;
+        controls.minDistance = 3;
+
+        // --- POST PROCESSING (glow + soft film) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.2, 0.7);
+        bloomPass.threshold = 0.15;
+        bloomPass.strength = 1.1;
+        bloomPass.radius = 0.3;
+
+        const filmPass = new FilmPass(0.2, 0.5, 2048, false);
+        filmPass.renderToScreen = true;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+        composer.addPass(filmPass);
+
+        // --- LIGHTING (futuristic medical) ---
+        const ambient = new THREE.AmbientLight(0x404060);
+        scene.add(ambient);
+
+        const keyLight = new THREE.DirectionalLight(0xccddff, 1.2);
+        keyLight.position.set(5, 8, 7);
+        scene.add(keyLight);
+
+        const fillLight = new THREE.PointLight(0x4466aa, 0.8, 30);
+        fillLight.position.set(-5, 2, 6);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0xaa44aa, 0.6, 30);
+        backLight.position.set(0, 2, -10);
+        scene.add(backLight);
+
+        // --- HOLOGRAM CHAMBER (transparent glowing rings and floor) ---
+        const chamberGroup = new THREE.Group();
+        
+        // base disc
+        const discGeo = new THREE.CylinderGeometry(6, 6, 0.1, 64);
+        const discMat = new THREE.MeshPhongMaterial({ color: 0x226688, emissive: 0x112233, transparent: true, opacity: 0.25 });
+        const disc = new THREE.Mesh(discGeo, discMat);
+        disc.position.y = -0.5;
+        chamberGroup.add(disc);
+
+        // outer ring
+        const ringGeo = new THREE.TorusGeometry(5.5, 0.08, 16, 100);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x114477 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = -0.3;
+        chamberGroup.add(ring);
+
+        // floating vertical lines (pillars)
+        for (let i=0; i<8; i++) {
+            const angle = (i/8)*Math.PI*2;
+            const x = Math.cos(angle)*5.5;
+            const z = Math.sin(angle)*5.5;
+            const pillarGeo = new THREE.CylinderGeometry(0.05, 0.05, 3, 6);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x66ccff, emissive: 0x114477 });
+            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar.position.set(x, 1.2, z);
+            chamberGroup.add(pillar);
+        }
+
+        scene.add(chamberGroup);
+
+        // floating particles (microscopic vibe)
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 600;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i=0; i<particleCount; i++) {
+            posArray[i*3] = (Math.random()-0.5)*20;
+            posArray[i*3+1] = (Math.random()-0.5)*10;
+            posArray[i*3+2] = (Math.random()-0.5)*20;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.06, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- MAIN HEART MODEL (constructed from multiple geometries to look realistic) ---
+        const heartGroup = new THREE.Group();
+        
+        // Outer semi-transparent shell (epicardium)
+        const outerShellGeo = new THREE.SphereGeometry(2.4, 64, 32);
+        // stretch to heart shape
+        const positionAttribute = outerShellGeo.attributes.position;
+        for (let i = 0; i < positionAttribute.count; i++) {
+            const x = positionAttribute.getX(i);
+            const y = positionAttribute.getY(i);
+            const z = positionAttribute.getZ(i);
+            // shape distortion: bulge on left side, indent on right
+            let stretchX = 1.0;
+            let stretchY = 1.2 + 0.15 * Math.sin(z * 1.5); 
+            let stretchZ = 0.9 + 0.2 * (y + 0.5);
+            // more pointy at bottom
+            if (y < -0.5) stretchY *= 1.2;
+            positionAttribute.setXYZ(i, x * 1.1, y * 1.3 + 0.2, z * 1.0);
+        }
+        outerShellGeo.computeVertexNormals();
+        
+        const outerMat = new THREE.MeshPhongMaterial({
+            color: 0xcc5555,
+            emissive: 0x331111,
+            transparent: true,
+            opacity: 0.35,
+            side: THREE.DoubleSide,
+            shininess: 30
+        });
+        const outerShell = new THREE.Mesh(outerShellGeo, outerMat);
+        heartGroup.add(outerShell);
+
+        // Inner core (solid looking chambers) - we combine several blobs
+        // Right atrium (reddish)
+        const raGeo = new THREE.SphereGeometry(1.2, 32, 16);
+        const raMat = new THREE.MeshStandardMaterial({ color: 0xff4466, emissive: 0x330000 });
+        const rightAtrium = new THREE.Mesh(raGeo, raMat);
+        rightAtrium.position.set(-0.8, 0.6, 0.5);
+        rightAtrium.scale.set(1.2, 1.0, 1.0);
+        heartGroup.add(rightAtrium);
+
+        // Left ventricle (blue)
+        const lvGeo = new THREE.SphereGeometry(1.4, 32, 16);
+        const lvMat = new THREE.MeshStandardMaterial({ color: 0x4466ff, emissive: 0x001133 });
+        const leftVentricle = new THREE.Mesh(lvGeo, lvMat);
+        leftVentricle.position.set(0.8, -0.3, -0.4);
+        leftVentricle.scale.set(1.1, 1.3, 0.9);
+        heartGroup.add(leftVentricle);
+
+        // Right ventricle (purple-ish)
+        const rvGeo = new THREE.SphereGeometry(1.1, 32, 16);
+        const rvMat = new THREE.MeshStandardMaterial({ color: 0xaa66cc, emissive: 0x220033 });
+        const rightVentricle = new THREE.Mesh(rvGeo, rvMat);
+        rightVentricle.position.set(-0.5, -0.5, 0.8);
+        rightVentricle.scale.set(0.9, 1.2, 1.1);
+        heartGroup.add(rightVentricle);
+
+        // Aorta (green marker)
+        const aortaGeo = new THREE.CylinderGeometry(0.6, 0.7, 1.8);
+        const aortaMat = new THREE.MeshStandardMaterial({ color: 0x88ff88, emissive: 0x113311 });
+        const aorta = new THREE.Mesh(aortaGeo, aortaMat);
+        aorta.position.set(0.0, 1.2, -0.3);
+        aorta.rotation.x = 0.2;
+        aorta.rotation.z = 0.3;
+        heartGroup.add(aorta);
+
+        // Pulmonary artery (purple marker)
+        const paGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.5);
+        const paMat = new THREE.MeshStandardMaterial({ color: 0xcc88ff, emissive: 0x331144 });
+        const pulmArtery = new THREE.Mesh(paGeo, paMat);
+        pulmArtery.position.set(-0.6, 1.0, 0.7);
+        pulmArtery.rotation.x = 0.5;
+        pulmArtery.rotation.z = -0.2;
+        heartGroup.add(pulmArtery);
+
+        // Valves (small moving rings) – we'll animate later
+        const valve1Geo = new THREE.TorusGeometry(0.45, 0.08, 16, 32);
+        const valve1Mat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 });
+        const mitralValve = new THREE.Mesh(valve1Geo, valve1Mat);
+        mitralValve.position.set(0.2, 0.1, 0.3);
+        mitralValve.rotation.x = Math.PI/2;
+        mitralValve.rotation.z = 0.3;
+        heartGroup.add(mitralValve);
+
+        const valve2Geo = new THREE.TorusGeometry(0.4, 0.07, 16, 32);
+        const valve2Mat = new THREE.MeshStandardMaterial({ color: 0xff8844, emissive: 0x442200 });
+        const tricuspidValve = new THREE.Mesh(valve2Geo, valve2Mat);
+        tricuspidValve.position.set(-0.4, -0.1, 0.6);
+        tricuspidValve.rotation.x = Math.PI/2;
+        tricuspidValve.rotation.z = -0.2;
+        heartGroup.add(tricuspidValve);
+
+        // Blood flow particles (red and blue streams)
+        const redFlowGeo = new THREE.BufferGeometry();
+        const redPositions = [];
+        for (let i=0; i<100; i++) {
+            redPositions.push((Math.random()-0.5)*2.5, (Math.random()-0.5)*3, (Math.random()-0.5)*2.5);
+        }
+        redFlowGeo.setAttribute('position', new THREE.Float32BufferAttribute(redPositions, 3));
+        const redFlowMat = new THREE.PointsMaterial({ color: 0xff3333, size: 0.1, blending: THREE.AdditiveBlending });
+        const redParticles = new THREE.Points(redFlowGeo, redFlowMat);
+        heartGroup.add(redParticles);
+
+        const blueFlowGeo = new THREE.BufferGeometry();
+        const bluePositions = [];
+        for (let i=0; i<100; i++) {
+            bluePositions.push((Math.random()-0.5)*2.5, (Math.random()-0.5)*3, (Math.random()-0.5)*2.5);
+        }
+        blueFlowGeo.setAttribute('position', new THREE.Float32BufferAttribute(bluePositions, 3));
+        const blueFlowMat = new THREE.PointsMaterial({ color: 0x3366ff, size: 0.1, blending: THREE.AdditiveBlending });
+        const blueParticles = new THREE.Points(blueFlowGeo, blueFlowMat);
+        heartGroup.add(blueParticles);
+
+        // Glowing markers (anatomical labels as small spheres)
+        const markerPositions = [
+            { pos: [-0.8, 0.7, 0.6], color: 0xff3355 }, // right atrium
+            { pos: [0.9, -0.3, -0.4], color: 0x33aaff }, // left ventricle
+            { pos: [0.1, 1.4, -0.3], color: 0x88ff88 }, // aorta
+            { pos: [-0.6, 1.2, 0.8], color: 0xcc88ff }, // pulmonary artery
+            { pos: [0.3, 0.2, 0.4], color: 0xffaa44 } // mitral valve
+        ];
+        markerPositions.forEach((m) => {
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshStandardMaterial({ color: m.color, emissive: m.color }));
+            sphere.position.set(m.pos[0], m.pos[1], m.pos[2]);
+            heartGroup.add(sphere);
+        });
+
+        heartGroup.scale.set(1.2, 1.2, 1.2);
+        scene.add(heartGroup);
+
+        // --- ANIMATION (beating, valves, blood flow) ---
+        let clock = new THREE.Clock();
+        let beatPhase = 0;
+
+        // Heartbeat sound (using Web Audio API with user interaction)
+        let audioCtx = null;
+        let heartbeatEnabled = true;
+        const toggleBtn = document.getElementById('heart-sound-toggle');
+        
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // schedule recurring heartbeat
+            const beatInterval = 0.86; // ~70 bpm
+            let lastBeat = 0;
+            function playBeat(time) {
+                if (!heartbeatEnabled || !audioCtx) return;
+                // low thump
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.value = 90;
+                gain1.gain.setValueAtTime(0.4, time);
+                gain1.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(time);
+                osc1.stop(time + 0.15);
+
+                // second thump (lub-dub)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.value = 70;
+                gain2.gain.setValueAtTime(0.3, time + 0.2);
+                gain2.gain.exponentialRampToValueAtTime(0.01, time + 0.35);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(time + 0.2);
+                osc2.stop(time + 0.35);
+            }
+            
+            function schedule() {
+                if (!heartbeatEnabled) return;
+                const now = audioCtx.currentTime;
+                if (now > lastBeat + 0.5) {
+                    playBeat(now + 0.05);
+                    lastBeat = now;
+                }
+                setTimeout(schedule, 800);
+            }
+            schedule();
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            heartbeatEnabled = !heartbeatEnabled;
+            toggleBtn.innerHTML = heartbeatEnabled ? '🔊 HEARTBEAT (ON)' : '🔇 HEARTBEAT (OFF)';
+            if (heartbeatEnabled && !audioCtx) {
+                initAudio();
+            }
+        });
+
+        // start audio on first user interaction with canvas
+        renderer.domElement.addEventListener('click', () => {
+            if (heartbeatEnabled && !audioCtx) initAudio();
+        }, { once: true });
+
+        function animate() {
+            const delta = clock.getDelta();
+            const time = performance.now() * 0.001;
+
+            // beating effect (scale)
+            beatPhase = Math.sin(time * 8) * 0.03 + 1.0; // fast beat
+            heartGroup.scale.set(1.2 + beatPhase*0.02, 1.2 + beatPhase*0.03, 1.2 + beatPhase*0.02);
+
+            // valves open/close (scale rings)
+            if (mitralValve) {
+                const valvePhase = Math.sin(time * 6) * 0.5 + 0.6;
+                mitralValve.scale.set(1, valvePhase, 1);
+                tricuspidValve.scale.set(1, valvePhase, 1);
+            }
+
+            // blood flow particle animation (rotate and move slightly)
+            redParticles.rotation.y += 0.005;
+            blueParticles.rotation.y -= 0.005;
+            
+            // move particles along paths (simple oscillation)
+            const positions = redParticles.geometry.attributes.position.array;
+            for (let i = 1; i < positions.length; i+=3) {
+                positions[i] += Math.sin(time + positions[i-1]) * 0.002; // subtle vertical drift
+            }
+            redParticles.geometry.attributes.position.needsUpdate = true;
+
+            const bluePos = blueParticles.geometry.attributes.position.array;
+            for (let i = 1; i < bluePos.length; i+=3) {
+                bluePos[i] += Math.cos(time + bluePos[i-2]) * 0.002;
+            }
+            blueParticles.geometry.attributes.position.needsUpdate = true;
+
+            // auto-rotate
+            controls.update();
+
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('Heart hologram ready');
+    </script>
+</body>
+</html>
