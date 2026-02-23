@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>States of Matter · Particle Simulation Lab</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background-color: black;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 15, 30, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid #44ccff;
+            border-radius: 40px;
+            padding: 18px 32px;
+            color: white;
+            box-shadow: 0 0 50px #44ccff88;
+            z-index: 20;
+            border-left: 5px solid #0ff;
+        }
+        #hud h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px cyan;
+        }
+        #hud .sub {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            color: #ccf;
+        }
+        #control-panel {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 10, 25, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid #ff66cc;
+            border-radius: 50px;
+            padding: 28px 35px;
+            width: 320px;
+            color: white;
+            box-shadow: 0 0 70px #ff44aa99;
+            z-index: 30;
+            border-bottom: 4px solid #f0f;
+            pointer-events: auto;
+        }
+        #control-panel h3 {
+            margin: 0 0 20px 0;
+            font-weight: 300;
+            font-size: 1.8rem;
+            color: #ffaaff;
+            text-align: center;
+            text-shadow: 0 0 15px magenta;
+        }
+        .state-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .state-btn {
+            background: rgba(30,30,60,0.8);
+            border: 2px solid #3366aa;
+            color: #aaf;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 0 15px #3366aa;
+        }
+        .state-btn.active {
+            background: #ff44aa;
+            border-color: #ffccff;
+            color: white;
+            box-shadow: 0 0 40px #ff44aa;
+        }
+        .state-btn.solid.active { background: #44aaff; border-color: #aaffff; }
+        .state-btn.liquid.active { background: #44aaff; }
+        .state-btn.gas.active { background: #ff8844; }
+
+        .slider-group {
+            margin: 25px 0;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #ccf;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #3366ff, #ff44aa);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 25px cyan;
+            border: 2px solid #0ff;
+            cursor: pointer;
+        }
+        #temp-display {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin: 10px 0;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #9cf;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #7cf;
+            z-index: 40;
+            font-size: 1rem;
+        }
+        #zoom-hint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #aaf;
+            background: rgba(0,20,40,0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #6cf;
+        }
+        .cinematic-badge {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: gold;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <h1>⚛️ STATES OF MATTER · PARTICLE LAB</h1>
+        <div class="sub">solid · liquid · gas · temperature energy · cinematic transitions</div>
+    </div>
+    <div id="zoom-hint">⛶ drag to orbit · scroll to zoom</div>
+    <div class="cinematic-badge">🎬 SLOW MOTION DYNAMICS</div>
+
+    <div id="control-panel">
+        <h3>🔮 HOLOGRAM CONTROLLER</h3>
+        <div class="state-buttons">
+            <div id="btn-solid" class="state-btn solid active">🧊 SOLID</div>
+            <div id="btn-liquid" class="state-btn liquid">💧 LIQUID</div>
+            <div id="btn-gas" class="state-btn gas">🌫️ GAS</div>
+        </div>
+        <div class="slider-group">
+            <label>🌡️ TEMPERATURE <span id="temp-value">300 K</span></label>
+            <input type="range" id="temp-slider" min="0" max="1000" value="300" step="1">
+        </div>
+        <div id="temp-display">⚡ 300 K · moderate</div>
+        <p style="color:#aac; text-align:center; margin-top:20px;">particle energy · smooth transitions</p>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · QUANTUM LAB</div>
+
+    <!-- Three.js imports -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+        
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x070514);
+        scene.fog = new THREE.FogExp2(0x070514, 0.005);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(12, 6, 18);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.5;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.maxDistance = 40;
+        controls.minDistance = 5;
+
+        // --- POST PROCESSING (glow + film grain) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.3, 0.3, 0.8);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.0;
+        bloomPass.radius = 0.3;
+
+        const filmPass = new FilmPass(0.25, 0.5, 2048, false);
+        filmPass.renderToScreen = true;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+        composer.addPass(filmPass);
+
+        // --- FUTURISTIC LAB CHAMBER ---
+        // Main floor disc
+        const floorGeo = new THREE.CylinderGeometry(9, 9, 0.2, 64);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x113355, emissive: 0x112233, transparent: true, opacity: 0.4 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.position.y = -0.5;
+        scene.add(floor);
+
+        // Outer glowing rings
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x114477 });
+        for (let i=0; i<3; i++) {
+            const ringGeo = new THREE.TorusGeometry(5 + i*1.2, 0.05, 16, 100);
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = -0.4;
+            scene.add(ring);
+        }
+
+        // Vertical light pillars
+        for (let i=0; i<6; i++) {
+            const angle = (i/6)*Math.PI*2;
+            const x = Math.cos(angle)*7;
+            const z = Math.sin(angle)*7;
+            const pillarGeo = new THREE.CylinderGeometry(0.1, 0.2, 4, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x66ccff, emissive: 0x224466 });
+            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar.position.set(x, 1.6, z);
+            scene.add(pillar);
+        }
+
+        // Holographic control panel (floating in front) – just a decorative element
+        const panelGroup = new THREE.Group();
+        const panelBase = new THREE.BoxGeometry(3, 2, 0.2);
+        const panelMat = new THREE.MeshPhongMaterial({ color: 0x224466, emissive: 0x112233, transparent: true, opacity: 0.7 });
+        const panel = new THREE.Mesh(panelBase, panelMat);
+        panel.position.set(0, 1.5, -6);
+        scene.add(panel);
+
+        // floating small cubes (holographic buttons)
+        for (let i=0; i<5; i++) {
+            const btnGeo = new THREE.BoxGeometry(0.3, 0.1, 0.1);
+            const btnMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, emissive: 0x224466 });
+            const btn = new THREE.Mesh(btnGeo, btnMat);
+            btn.position.set(-1.2 + i*0.6, 1.6, -5.8);
+            scene.add(btn);
+        }
+
+        // --- PARTICLES (atoms/molecules) ---
+        const particleCount = 200;
+        const particles = [];
+        const colors = [0x44aaff, 0xffaa44, 0x88ff88, 0xff6688];
+
+        // Create individual sphere meshes for better control (vs Points)
+        for (let i = 0; i < particleCount; i++) {
+            const size = 0.25 + Math.random()*0.1;
+            const geo = new THREE.SphereGeometry(size, 16, 16);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: colors[Math.floor(Math.random() * colors.length)],
+                emissive: 0x222222,
+                shininess: 30
+            });
+            const sphere = new THREE.Mesh(geo, mat);
+            
+            // initial positions (solid-like)
+            const gridSize = 8;
+            const cols = Math.floor(Math.sqrt(particleCount));
+            const spacing = 1.2;
+            const x = (i % cols) * spacing - (cols*spacing)/2;
+            const y = Math.floor(i / cols) * spacing - (cols*spacing)/2 + 1;
+            const z = (Math.floor(i / (cols*cols)) % cols) * spacing - (cols*spacing)/2;
+            
+            sphere.position.set(x, y, z);
+            sphere.castShadow = true;
+            sphere.receiveShadow = false;
+            
+            // store velocity and phase for dynamics
+            sphere.userData = {
+                velocity: new THREE.Vector3(0,0,0),
+                basePos: sphere.position.clone(),
+                phase: Math.random() * Math.PI * 2,
+                mass: size
+            };
+            
+            scene.add(sphere);
+            particles.push(sphere);
+        }
+
+        // --- STATE PARAMETERS ---
+        let currentState = 'solid'; // solid, liquid, gas
+        let temperature = 300; // 0-1000
+        let targetState = 'solid';
+        let transitionSpeed = 0.02; // smooth
+
+        // UI Elements
+        const btnSolid = document.getElementById('btn-solid');
+        const btnLiquid = document.getElementById('btn-liquid');
+        const btnGas = document.getElementById('btn-gas');
+        const tempSlider = document.getElementById('temp-slider');
+        const tempValue = document.getElementById('temp-value');
+        const tempDisplay = document.getElementById('temp-display');
+
+        btnSolid.addEventListener('click', () => {
+            setActiveState('solid');
+            targetState = 'solid';
+        });
+        btnLiquid.addEventListener('click', () => {
+            setActiveState('liquid');
+            targetState = 'liquid';
+        });
+        btnGas.addEventListener('click', () => {
+            setActiveState('gas');
+            targetState = 'gas';
+        });
+
+        function setActiveState(state) {
+            btnSolid.classList.remove('active');
+            btnLiquid.classList.remove('active');
+            btnGas.classList.remove('active');
+            if (state === 'solid') btnSolid.classList.add('active');
+            if (state === 'liquid') btnLiquid.classList.add('active');
+            if (state === 'gas') btnGas.classList.add('active');
+        }
+
+        tempSlider.addEventListener('input', (e) => {
+            temperature = parseInt(e.target.value);
+            tempValue.textContent = temperature + ' K';
+            let desc = 'very cold';
+            if (temperature > 800) desc = 'extremely hot';
+            else if (temperature > 600) desc = 'hot';
+            else if (temperature > 400) desc = 'warm';
+            else if (temperature > 200) desc = 'moderate';
+            else desc = 'cold';
+            tempDisplay.innerHTML = `⚡ ${temperature} K · ${desc}`;
+            
+            // map temperature to behavior: low temp favors solid, high favors gas
+            if (temperature < 200) targetState = 'solid';
+            else if (temperature > 700) targetState = 'gas';
+            else if (temperature > 350 && temperature < 600) targetState = 'liquid';
+            // else remain whatever user selected, but we can auto? We'll respect user click, but temperature influences behavior.
+            // For demo, we let temperature affect particle energy directly.
+        });
+
+        // --- ANIMATION LOOP (cinematic slow motion physics) ---
+        const clock = new THREE.Clock();
+        const center = new THREE.Vector3(0, 2, 0);
+
+        function animate() {
+            const delta = clock.getDelta();
+            // slow-motion factor (make dynamics smoother)
+            const time = performance.now() * 0.001;
+            
+            // smooth transition between states based on targetState and temperature
+            // blend factor: 0 solid, 1 liquid, 2 gas (approx)
+            let targetEnergy = 0.0;
+            if (targetState === 'solid') targetEnergy = 0.1;
+            else if (targetState === 'liquid') targetEnergy = 0.5;
+            else if (targetState === 'gas') targetEnergy = 1.5;
+            
+            // temperature modifies energy
+            const tempFactor = temperature / 500; // 0-2 range
+            const energy = targetEnergy * (0.5 + tempFactor * 0.8);
+            
+            // update each particle
+            particles.forEach((p, idx) => {
+                const data = p.userData;
+                // base position around a lattice (for solid) plus random motion
+                // we use a combination of random walk and spring forces to create states
+                
+                // Solid: vibration around fixed lattice
+                // Liquid: drift with neighbors, more flow
+                // Gas: high velocity, random spreading
+                
+                // Simple simulation: each particle has velocity, plus random acceleration
+                // and a weak containment force to keep them in view
+                
+                // random acceleration based on energy
+                const ax = (Math.random() - 0.5) * energy * 0.2;
+                const ay = (Math.random() - 0.5) * energy * 0.2;
+                const az = (Math.random() - 0.5) * energy * 0.2;
+                
+                data.velocity.x += ax;
+                data.velocity.y += ay;
+                data.velocity.z += az;
+                
+                // damping
+                data.velocity.multiplyScalar(0.98);
+                
+                // move
+                p.position.x += data.velocity.x;
+                p.position.y += data.velocity.y;
+                p.position.z += data.velocity.z;
+                
+                // containment (soft sphere boundary)
+                const bound = 7.0;
+                if (Math.abs(p.position.x) > bound) data.velocity.x -= 0.02 * Math.sign(p.position.x);
+                if (Math.abs(p.position.y) > bound) data.velocity.y -= 0.02 * Math.sign(p.position.y);
+                if (Math.abs(p.position.z) > bound) data.velocity.z -= 0.02 * Math.sign(p.position.z);
+                
+                // for solid state, also add a spring to original lattice
+                if (targetState === 'solid') {
+                    // attract to initial grid position (simulate lattice)
+                    const latticePos = data.basePos;
+                    const dx = latticePos.x - p.position.x;
+                    const dy = latticePos.y - p.position.y;
+                    const dz = latticePos.z - p.position.z;
+                    data.velocity.x += dx * 0.01;
+                    data.velocity.y += dy * 0.01;
+                    data.velocity.z += dz * 0.01;
+                } else if (targetState === 'liquid') {
+                    // gentle attraction to center of mass to keep together
+                    const toCenter = center.clone().sub(p.position);
+                    toCenter.multiplyScalar(0.001);
+                    data.velocity.add(toCenter);
+                } else {
+                    // gas: slight repulsion from center to spread
+                    const fromCenter = p.position.clone().sub(center);
+                    fromCenter.multiplyScalar(0.0005);
+                    data.velocity.add(fromCenter);
+                }
+                
+                // keep particles from collapsing too much
+            });
+
+            // subtle rotation of whole group for dynamism
+            // not needed
+
+            controls.update();
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // initialize
+        setActiveState('solid');
+        console.log('Particle lab ready');
+    </script>
+</body>
+</html>
