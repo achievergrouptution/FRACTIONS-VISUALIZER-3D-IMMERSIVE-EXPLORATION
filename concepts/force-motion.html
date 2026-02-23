@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force & Motion · 3D Physics Lab</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', 'Arial', sans-serif;
+            background: black;
+        }
+        #hologram-newton {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 10, 30, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid #66ccff;
+            border-radius: 60px;
+            padding: 16px 48px;
+            color: white;
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-shadow: 0 0 30px #66ccff, 0 0 60px #3366ff;
+            box-shadow: 0 0 70px #66ccffaa;
+            z-index: 20;
+            border-left: 6px solid cyan;
+            white-space: nowrap;
+        }
+        #hologram-newton span {
+            color: #ffaa66;
+            font-weight: 500;
+        }
+        #control-panel {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(5, 15, 30, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid #ffaa66;
+            border-radius: 50px;
+            padding: 28px 35px;
+            width: 340px;
+            color: white;
+            box-shadow: 0 0 90px #ffaa66aa;
+            z-index: 30;
+            border-bottom: 4px solid orange;
+            pointer-events: auto;
+        }
+        #control-panel h3 {
+            margin: 0 0 20px 0;
+            font-weight: 300;
+            font-size: 2rem;
+            color: #ffcc88;
+            text-align: center;
+            text-shadow: 0 0 15px orange;
+        }
+        .slider-group {
+            margin: 25px 0;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #aaf;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #3366ff, #ff44aa);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 30px cyan;
+            border: 3px solid #0ff;
+            cursor: pointer;
+        }
+        .param-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .force-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            background: rgba(0,30,50,0.5);
+            border-radius: 40px;
+            padding: 15px;
+        }
+        .force-box {
+            text-align: center;
+        }
+        .force-label {
+            color: #9cf;
+            font-size: 0.9rem;
+        }
+        .force-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffaa66;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #acf;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #9cf;
+            z-index: 40;
+            font-size: 1rem;
+        }
+        #drag-instruction {
+            position: absolute;
+            top: 120px;
+            left: 30px;
+            color: #aaf;
+            background: rgba(20,0,30,0.6);
+            backdrop-filter: blur(5px);
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: 1px solid #f6f;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="hologram-newton">
+        ⚡ <span>NEWTON'S LAWS</span>  F = m · a  ⚡
+    </div>
+    <div id="drag-instruction">↗️ drag orange arrow to apply force</div>
+
+    <div id="control-panel">
+        <h3>🔮 MOTION LAB</h3>
+        <div class="slider-group">
+            <label>⚖️ MASS (kg) <span id="mass-value" class="param-value">5.0</span></label>
+            <input type="range" id="mass-slider" min="1" max="20" value="5" step="0.5">
+        </div>
+        <div class="slider-group">
+            <label>🌀 FRICTION (μ) <span id="friction-value" class="param-value">0.3</span></label>
+            <input type="range" id="friction-slider" min="0" max="1" value="0.3" step="0.05">
+        </div>
+        <div class="force-display">
+            <div class="force-box"><span class="force-label">FORCE (N)</span><span id="force-mag" class="force-number">0.0</span></div>
+            <div class="force-box"><span class="force-label">ACCEL (m/s²)</span><span id="accel-mag" class="force-number">0.0</span></div>
+        </div>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · CINEMATIC PHYSICS LAB</div>
+
+    <!-- Three.js imports -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { DragControls } from 'three/addons/controls/DragControls.js';
+
+        // --- SCENE ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x080c1a);
+        scene.fog = new THREE.FogExp2(0x080c1a, 0.004);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(12, 8, 16);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.8;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.maxDistance = 30;
+
+        // --- POST PROCESSING (glow) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.3, 0.8);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.3;
+        bloomPass.radius = 0.4;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- LIGHTING ---
+        const ambient = new THREE.AmbientLight(0x40406b);
+        scene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(5, 15, 8);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        const fillLight = new THREE.PointLight(0x6688ff, 0.9, 30);
+        fillLight.position.set(-5, 5, 8);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0xff88aa, 0.6, 30);
+        backLight.position.set(3, 2, -12);
+        scene.add(backLight);
+
+        // --- FUTURISTIC SURFACE (floor) ---
+        const floorGeo = new THREE.CylinderGeometry(12, 12, 0.2, 64);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x224466, emissive: 0x112233, transparent: true, opacity: 0.5 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.receiveShadow = true;
+        floor.position.y = -0.1;
+        scene.add(floor);
+
+        // glowing rings on floor
+        for (let i=0; i<3; i++) {
+            const ringGeo = new THREE.TorusGeometry(4 + i*2, 0.05, 16, 100);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x114477 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = 0;
+            scene.add(ring);
+        }
+
+        // floating particles (dust)
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 500;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i=0; i<particleCount; i++) {
+            posArray[i*3] = (Math.random()-0.5)*40;
+            posArray[i*3+1] = (Math.random()-0.5)*20;
+            posArray[i*3+2] = (Math.random()-0.5)*40;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- MAIN OBJECT (glowing cube) ---
+        const cubeGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
+        const cubeMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200 });
+        const cube = new THREE.Mesh(cubeGeo, cubeMat);
+        cube.castShadow = true;
+        cube.receiveShadow = true;
+        cube.position.set(0, 1, 0);
+        scene.add(cube);
+
+        // --- FORCE ARROW (draggable) ---
+        // We'll create an arrow helper that starts at cube and extends
+        const arrowDir = new THREE.Vector3(1, 0, 0);
+        const arrowLength = 2.0;
+        const arrowColor = 0xff6600;
+        const arrowHelper = new THREE.ArrowHelper(arrowDir, cube.position, arrowLength, arrowColor, 0.6, 0.3);
+        scene.add(arrowHelper);
+
+        // Draggable point at tip of arrow? We'll use a small sphere at tip for dragging
+        const tipGeo = new THREE.SphereGeometry(0.3, 16, 16);
+        const tipMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 });
+        const tipSphere = new THREE.Mesh(tipGeo, tipMat);
+        tipSphere.position.copy(cube.position.clone().add(arrowDir.clone().multiplyScalar(arrowLength)));
+        scene.add(tipSphere);
+
+        // Drag controls on tip sphere to adjust force
+        const dragControls = new DragControls([tipSphere], camera, renderer.domElement);
+        dragControls.addEventListener('dragstart', () => controls.enabled = false);
+        dragControls.addEventListener('drag', () => {
+            // update arrow direction and length
+            const cubePos = cube.position;
+            const tipPos = tipSphere.position;
+            const dir = new THREE.Vector3().subVectors(tipPos, cubePos);
+            const length = dir.length();
+            if (length > 0.1) {
+                arrowDir.copy(dir.normalize());
+                arrowHelper.setDirection(arrowDir);
+                arrowHelper.setLength(length, 0.6, 0.3);
+                updateForce(length);
+            }
+        });
+        dragControls.addEventListener('dragend', () => controls.enabled = true);
+
+        // --- MOTION TRAIL (array of positions) ---
+        const trailLength = 30;
+        const trailPositions = [];
+        for (let i=0; i<trailLength; i++) trailPositions.push(cube.position.clone());
+        const trailGeometry = new THREE.BufferGeometry();
+        const trailMaterial = new THREE.LineBasicMaterial({ color: 0xffaa33 });
+        const trailLine = new THREE.Line(trailGeometry, trailMaterial);
+        scene.add(trailLine);
+
+        // --- VELOCITY AND ACCELERATION VECTORS (glowing) ---
+        const velArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), cube.position, 0.5, 0x33ff33, 0.3, 0.2);
+        const accArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), cube.position, 0.5, 0xff3333, 0.3, 0.2);
+        scene.add(velArrow);
+        scene.add(accArrow);
+
+        // --- PHYSICS STATE ---
+        let mass = 5.0;
+        let friction = 0.3;
+        let appliedForce = new THREE.Vector3(0,0,0);
+        let velocity = new THREE.Vector3(0,0,0);
+        let acceleration = new THREE.Vector3(0,0,0);
+
+        // UI elements
+        const massSlider = document.getElementById('mass-slider');
+        const frictionSlider = document.getElementById('friction-slider');
+        const massVal = document.getElementById('mass-value');
+        const frictionVal = document.getElementById('friction-value');
+        const forceMagSpan = document.getElementById('force-mag');
+        const accelMagSpan = document.getElementById('accel-mag');
+
+        massSlider.addEventListener('input', (e) => {
+            mass = parseFloat(e.target.value);
+            massVal.textContent = mass.toFixed(1);
+        });
+        frictionSlider.addEventListener('input', (e) => {
+            friction = parseFloat(e.target.value);
+            frictionVal.textContent = friction.toFixed(2);
+        });
+
+        function updateForce(length) {
+            // scale force with length (max ~20N)
+            const forceMag = length * 5;
+            appliedForce.copy(arrowDir.clone().multiplyScalar(forceMag));
+            forceMagSpan.textContent = forceMag.toFixed(1);
+        }
+
+        // --- ANIMATION LOOP (physics update) ---
+        const clock = new THREE.Clock();
+        const floorLevel = 1.0; // cube center at y=1
+
+        function animate() {
+            const delta = Math.min(clock.getDelta(), 0.05); // cap for stability
+
+            // Physics: compute net force (applied + friction)
+            const frictionForce = velocity.clone().normalize().multiplyScalar(-friction * mass * 9.8); // simple kinetic friction
+            if (velocity.length() < 0.01) frictionForce.set(0,0,0);
+            
+            const netForce = appliedForce.clone().add(frictionForce);
+            acceleration.copy(netForce.clone().divideScalar(mass));
+            
+            // update velocity and position
+            velocity.add(acceleration.clone().multiplyScalar(delta));
+            cube.position.add(velocity.clone().multiplyScalar(delta));
+            
+            // damping / stop at floor edges? keep within bounds
+            if (cube.position.x > 8) cube.position.x = 8;
+            if (cube.position.x < -8) cube.position.x = -8;
+            if (cube.position.z > 8) cube.position.z = 8;
+            if (cube.position.z < -8) cube.position.z = -8;
+
+            // update trail
+            trailPositions.shift();
+            trailPositions.push(cube.position.clone());
+            const trailPoints = trailPositions.map(p => p.clone());
+            trailLine.geometry.dispose();
+            trailLine.geometry = new THREE.BufferGeometry().setFromPoints(trailPoints);
+
+            // update arrows
+            arrowHelper.position.copy(cube.position);
+            tipSphere.position.copy(cube.position.clone().add(arrowDir.clone().multiplyScalar(appliedForce.length() / 5))); // scale back
+            
+            velArrow.position.copy(cube.position);
+            if (velocity.length() > 0.1) {
+                velArrow.setDirection(velocity.clone().normalize());
+                velArrow.setLength(velocity.length(), 0.3, 0.2);
+            } else velArrow.setLength(0);
+            
+            accArrow.position.copy(cube.position);
+            if (acceleration.length() > 0.05) {
+                accArrow.setDirection(acceleration.clone().normalize());
+                accArrow.setLength(acceleration.length(), 0.3, 0.2);
+            } else accArrow.setLength(0);
+
+            // update UI acceleration
+            accelMagSpan.textContent = acceleration.length().toFixed(2);
+
+            // subtle rotation based on velocity
+            cube.rotation.y += velocity.length() * delta * 2;
+
+            controls.update();
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('Physics lab ready');
+    </script>
+</body>
+</html>
