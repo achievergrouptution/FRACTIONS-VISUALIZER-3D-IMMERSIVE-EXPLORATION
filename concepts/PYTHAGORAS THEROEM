@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythagoras Theorem · 3D Geometry Lab</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'Arial', sans-serif; background-color: black; }
+        #holographic-formula {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 20, 40, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            border-radius: 60px;
+            padding: 18px 40px;
+            color: white;
+            font-size: 2.6rem;
+            font-weight: 300;
+            letter-spacing: 6px;
+            text-shadow: 0 0 30px cyan, 0 0 60px blue;
+            box-shadow: 0 0 40px rgba(0,255,255,0.3), inset 0 0 20px rgba(0,255,255,0.2);
+            z-index: 20;
+            white-space: nowrap;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+        #holographic-formula span { 
+            color: #ffaa00; 
+            text-shadow: 0 0 20px orange; 
+            font-weight: 600; 
+            margin: 0 10px; 
+        }
+        #side-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(10, 5, 20, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #33ccff;
+            border-radius: 30px;
+            padding: 20px 30px;
+            color: #ccf;
+            box-shadow: 0 0 50px rgba(0,160,255,0.5);
+            z-index: 15;
+            pointer-events: none;
+        }
+        #side-panel .values {
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            gap: 40px;
+            margin-top: 8px;
+        }
+        .value-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .value-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: #9cf;
+        }
+        .value-number {
+            font-size: 2.3rem;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        .unit { font-size: 1rem; color: #8ab; }
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0,10,25,0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #ff66cc;
+            border-radius: 40px;
+            padding: 25px;
+            width: 260px;
+            color: white;
+            box-shadow: 0 0 40px #ff44aa88;
+            z-index: 15;
+            pointer-events: auto;
+        }
+        #controls h3 {
+            margin: 0 0 20px 0;
+            font-weight: 300;
+            color: #ffaaff;
+            text-align: center;
+            text-shadow: 0 0 15px magenta;
+        }
+        .slider-group {
+            margin-bottom: 25px;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #aaf;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #0ff, #f0f);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #0ff;
+            border: 2px solid cyan;
+            cursor: grab;
+        }
+        #footer {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #6cf;
+            font-size: 0.9rem;
+            text-shadow: 0 0 8px blue;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(5px);
+            z-index: 30;
+            border: 1px solid #3cf;
+        }
+    </style>
+</head>
+<body>
+    <div id="holographic-formula">
+        <span>a²</span> + <span>b²</span> = <span>c²</span>
+    </div>
+
+    <div id="side-panel">
+        <div style="font-size:1.2rem; margin-bottom:8px;">⚡ PYTHAGOREAN LAB ⚡</div>
+        <div class="values">
+            <div class="value-box"><span class="value-label">a</span><span class="value-number" id="a-val">3.0</span><span class="unit">m</span></div>
+            <div class="value-box"><span class="value-label">b</span><span class="value-number" id="b-val">4.0</span><span class="unit">m</span></div>
+            <div class="value-box"><span class="value-label">c</span><span class="value-number" id="c-val">5.0</span><span class="unit">m</span></div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <h3>🔮 ADJUST SIDES</h3>
+        <div class="slider-group">
+            <label>leg a <span id="a-slider-val">3.0</span></label>
+            <input type="range" id="a-slider" min="2.0" max="6.0" value="3.0" step="0.1">
+        </div>
+        <div class="slider-group">
+            <label>leg b <span id="b-slider-val">4.0</span></label>
+            <input type="range" id="b-slider" min="2.0" max="6.0" value="4.0" step="0.1">
+        </div>
+        <div style="text-align:center; color:#9cf; margin-top:15px;">c = <span id="c-dyn">5.00</span></div>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · PYTHAGORAS 3D</div>
+
+    <!-- Three.js imports -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+        
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x030311);
+        scene.fog = new THREE.FogExp2(0x030311, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(10, 6, 14);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.8;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls with dramatic slow auto-rotate
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.03;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.minDistance = 7;
+        controls.maxDistance = 25;
+
+        // --- POST PROCESSING (glow) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.4;
+        bloomPass.radius = 0.4;
+        
+        const filmPass = new FilmPass(0.25, 0.5, 2048, false);
+        filmPass.renderToScreen = true;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+        composer.addPass(filmPass);
+
+        // --- LIGHTING (cinematic) ---
+        const ambient = new THREE.AmbientLight(0x404080);
+        scene.add(ambient);
+        
+        const mainLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+        mainLight.position.set(5, 15, 10);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+
+        const fillLight = new THREE.PointLight(0x4466ff, 1.0, 30);
+        fillLight.position.set(-4, 5, 8);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0xff44aa, 0.9, 30);
+        backLight.position.set(2, 3, -10);
+        scene.add(backLight);
+
+        // --- DIGITAL GRID (floor) ---
+        const gridHelper = new THREE.GridHelper(30, 40, 0x00ffff, 0x3366aa);
+        gridHelper.position.y = 0;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // floating particles for ambiance
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 600;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            posArray[i*3] = (Math.random() - 0.5) * 50;
+            posArray[i*3+1] = (Math.random() * 12) + 2;
+            posArray[i*3+2] = (Math.random() - 0.5) * 50;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.15, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- MAIN GEOMETRY: RIGHT TRIANGLE (floating slightly above grid) ---
+        const triangleGroup = new THREE.Group();
+        triangleGroup.position.set(0, 0.2, 0);
+        scene.add(triangleGroup);
+
+        // Material for triangle (glowing wireframe / edges)
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x88ddff });
+        
+        // We will dynamically update the triangle vertices.
+        // Let's create a triangle mesh (semi-transparent) and three squares attached to each side.
+        
+        // semi-transparent face
+        let triangleMesh;
+        function createTriangleMesh(a, b) {
+            const c = Math.sqrt(a*a + b*b);
+            const points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(a, 0, 0),
+                new THREE.Vector3(0, 0, b)  // using Z for the other leg to keep flat on XZ plane
+            ];
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            // we need an index for a triangle
+            const indices = [0, 1, 2];
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0x3399ff, 
+                emissive: 0x113366,
+                transparent: true, 
+                opacity: 0.25,
+                side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = false;
+            return mesh;
+        }
+
+        // Edges (glowing lines)
+        let line1, line2, line3;
+        function createEdges(a, b) {
+            const c = Math.sqrt(a*a + b*b);
+            const points = [
+                [0,0,0], [a,0,0],
+                [a,0,0], [0,0,b],
+                [0,0,b], [0,0,0]
+            ];
+            const geo = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                0,0,0, a,0,0,
+                a,0,0, 0,0,b,
+                0,0,b, 0,0,0
+            ]);
+            geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            const mat = new THREE.LineBasicMaterial({ color: 0x77eeff });
+            return new THREE.LineSegments(geo, mat);
+        }
+
+        // Squares holders
+        const squaresGroup = new THREE.Group();
+        triangleGroup.add(squaresGroup);
+
+        let squareA, squareB, squareC; // meshes
+
+        function buildSquares(a, b) {
+            squaresGroup.clear();
+            const c = Math.sqrt(a*a + b*b);
+            
+            // Square on side A (along X axis)
+            const geoA = new THREE.BoxGeometry(a, 0.2, a);
+            const matA = new THREE.MeshStandardMaterial({ color: 0xff5533, emissive: 0x441100 });
+            squareA = new THREE.Mesh(geoA, matA);
+            squareA.position.set(a/2, 0.1, -a/2);
+            squareA.castShadow = true;
+            squareA.receiveShadow = true;
+
+            // Square on side B (along Z axis)
+            const geoB = new THREE.BoxGeometry(b, 0.2, b);
+            const matB = new THREE.MeshStandardMaterial({ color: 0x33ccff, emissive: 0x113366 });
+            squareB = new THREE.Mesh(geoB, matB);
+            squareB.position.set(-b/2, 0.1, b/2);
+            squareB.rotation.y = 0;
+            squareB.castShadow = true;
+            squareB.receiveShadow = true;
+
+            // Square on hypotenuse (rotated)
+            const hypLength = c;
+            const geoCHyp = new THREE.BoxGeometry(hypLength, 0.2, hypLength);
+            const matC = new THREE.MeshStandardMaterial({ color: 0xcc66ff, emissive: 0x331144 });
+            squareC = new THREE.Mesh(geoCHyp, matC);
+            
+            // position and rotate to align with hypotenuse
+            // midpoint of hypotenuse: (a/2, 0, b/2) ? Actually vector from (0,0) to (a,0,b) midpoint = (a/2, 0, b/2)
+            // angle = atan2(b, a)
+            const angle = Math.atan2(b, a);
+            squareC.position.set(a/2, 0.1, b/2);
+            squareC.rotation.y = -angle; // align length along hypotenuse direction? box is square so rotation just for looks
+            squareC.castShadow = true;
+            squareC.receiveShadow = true;
+
+            squaresGroup.add(squareA);
+            squaresGroup.add(squareB);
+            squaresGroup.add(squareC);
+
+            // Add glowing edges to squares (wireframe)
+            const edgesA = new THREE.EdgesGeometry(geoA);
+            const lineA = new THREE.LineSegments(edgesA, new THREE.LineBasicMaterial({ color: 0xffaa00 }));
+            lineA.position.copy(squareA.position);
+            squaresGroup.add(lineA);
+
+            const edgesB = new THREE.EdgesGeometry(geoB);
+            const lineB = new THREE.LineSegments(edgesB, new THREE.LineBasicMaterial({ color: 0x00ccff }));
+            lineB.position.copy(squareB.position);
+            squaresGroup.add(lineB);
+
+            const edgesC = new THREE.EdgesGeometry(geoCHyp);
+            const lineC = new THREE.LineSegments(edgesC, new THREE.LineBasicMaterial({ color: 0xcc88ff }));
+            lineC.position.copy(squareC.position);
+            lineC.rotation.y = -angle;
+            squaresGroup.add(lineC);
+        }
+
+        // Init
+        let a = 3.0, b = 4.0;
+        triangleGroup.add(createTriangleMesh(a, b));
+        triangleGroup.add(createEdges(a, b));
+        buildSquares(a, b);
+
+        // replace triangle mesh and edges on update
+        function updateGeometry(newA, newB) {
+            triangleGroup.clear(); // remove old
+            triangleGroup.add(createTriangleMesh(newA, newB));
+            triangleGroup.add(createEdges(newA, newB));
+            buildSquares(newA, newB);
+            
+            // update UI
+            const c = Math.sqrt(newA*newA + newB*newB);
+            document.getElementById('a-val').textContent = newA.toFixed(1);
+            document.getElementById('b-val').textContent = newB.toFixed(1);
+            document.getElementById('c-val').textContent = c.toFixed(2);
+            document.getElementById('c-dyn').textContent = c.toFixed(2);
+        }
+
+        // --- SLIDERS ---
+        const aSlider = document.getElementById('a-slider');
+        const bSlider = document.getElementById('b-slider');
+        const aSliderVal = document.getElementById('a-slider-val');
+        const bSliderVal = document.getElementById('b-slider-val');
+
+        aSlider.addEventListener('input', (e) => {
+            a = parseFloat(e.target.value);
+            aSliderVal.textContent = a.toFixed(1);
+            updateGeometry(a, b);
+        });
+        bSlider.addEventListener('input', (e) => {
+            b = parseFloat(e.target.value);
+            bSliderVal.textContent = b.toFixed(1);
+            updateGeometry(a, b);
+        });
+
+        // small area transfer effect: we could animate particle transfer but keep simple for performance
+        // Instead add floating numbers around squares that show area
+        const areaLabelsGroup = new THREE.Group();
+        scene.add(areaLabelsGroup);
+        
+        function updateAreaLabels() {
+            // quick and dirty canvas sprites? skip for performance, rely on UI panel.
+        }
+
+        // Holographic floating orbs near vertices
+        const markers = [];
+        const markerMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0x552200 });
+        for (let i=0; i<3; i++) {
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), markerMat);
+            sphere.castShadow = true;
+            sphere.receiveShadow = false;
+            markers.push(sphere);
+            scene.add(sphere);
+        }
+
+        // Animation loop: update vertex markers
+        function animateMarkers() {
+            const c = Math.sqrt(a*a + b*b);
+            const pos = [
+                new THREE.Vector3(0, 0.3, 0),
+                new THREE.Vector3(a, 0.3, 0),
+                new THREE.Vector3(0, 0.3, b)
+            ];
+            markers.forEach((m, i) => m.position.copy(pos[i]));
+        }
+
+        // --- PARTICLE AREA TRANSFER (simulate squares breaking into particles) ---
+        // We'll create a simple particle system that flows between squares when values change.
+        // For brevity, just add ambient floating particles near squares.
+
+        // --- ANIMATION LOOP ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            const delta = clock.getDelta();
+            
+            // auto-rotate
+            controls.update();
+
+            // subtle floating for squares
+            if (squareA) {
+                squareA.rotation.y += 0.002;
+                squareB.rotation.y += 0.002;
+                squareC.rotation.y += 0.002;
+            }
+
+            // update markers
+            animateMarkers();
+
+            // glow intensity variation
+            const time = Date.now() * 0.001;
+
+            // render
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // initial call
+        updateGeometry(3.0, 4.0);
+
+        // add some extra sci-fi floating digits (just for looks)
+        const digitGeo = new THREE.BufferGeometry();
+        const digitPos = [];
+        for (let i=0; i<20; i++) {
+            digitPos.push((Math.random()-0.5)*12, Math.random()*6, (Math.random()-0.5)*12);
+        }
+        digitGeo.setAttribute('position', new THREE.Float32BufferAttribute(digitPos, 3));
+        const digitPoints = new THREE.Points(digitGeo, new THREE.PointsMaterial({color: 0x88ccff, size: 0.1}));
+        scene.add(digitPoints);
+
+        console.log('Pythagoras lab ready');
+    </script>
+</body>
+</html>
