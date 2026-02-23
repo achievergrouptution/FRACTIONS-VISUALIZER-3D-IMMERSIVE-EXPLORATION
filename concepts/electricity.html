@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Flow · 3D Circuit Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background-color: black;
+        }
+        #hologram-ohm {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 20, 40, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid #ffaa33;
+            border-radius: 60px;
+            padding: 16px 40px;
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px #ffaa33, 0 0 60px #ff6600;
+            box-shadow: 0 0 50px #ffaa3366;
+            z-index: 20;
+            border-left: 6px solid orange;
+            white-space: nowrap;
+        }
+        #hologram-ohm span {
+            color: #ffaa44;
+            font-weight: 600;
+            margin: 0 10px;
+        }
+        #control-panel {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 5, 20, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid #33ccff;
+            border-radius: 50px;
+            padding: 28px 35px;
+            width: 340px;
+            color: white;
+            box-shadow: 0 0 80px #33ccffaa;
+            z-index: 30;
+            border-bottom: 4px solid cyan;
+            pointer-events: auto;
+        }
+        #control-panel h3 {
+            margin: 0 0 20px 0;
+            font-weight: 300;
+            font-size: 2rem;
+            color: #aaffff;
+            text-align: center;
+            text-shadow: 0 0 15px cyan;
+        }
+        .slider-group {
+            margin: 25px 0;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #aaf;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(90deg, #3366ff, #ff44aa);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 30px cyan;
+            border: 3px solid #0ff;
+            cursor: pointer;
+        }
+        .param-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0ef, #f0f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .resistor-toggle {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .toggle-btn {
+            background: rgba(30,30,60,0.8);
+            border: 2px solid #ff66aa;
+            color: #ffb0dd;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 20px #ff66aa;
+            flex: 1;
+            text-align: center;
+        }
+        .toggle-btn.active {
+            background: #ff44aa;
+            border-color: white;
+            color: white;
+            box-shadow: 0 0 40px #ff44aa;
+        }
+        #current-indicator {
+            text-align: center;
+            font-size: 1.4rem;
+            margin-top: 20px;
+            color: #88ddff;
+            border-top: 1px solid #336699;
+            padding-top: 20px;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #9cf;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #7cf;
+            z-index: 40;
+            font-size: 1rem;
+        }
+        #direction-hint {
+            position: absolute;
+            top: 120px;
+            right: 30px;
+            color: #aaf;
+            background: rgba(0,30,50,0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: 1px solid cyan;
+            font-size: 1rem;
+            z-index: 25;
+        }
+    </style>
+</head>
+<body>
+    <div id="hologram-ohm">
+        ⚡ <span>OHM'S LAW</span>  V = I · R  <span>⚡</span>
+    </div>
+    <div id="direction-hint">🔵 electrons flow · current direction →</div>
+
+    <div id="control-panel">
+        <h3>🔮 CIRCUIT LAB</h3>
+        <div class="slider-group">
+            <label>⚡ VOLTAGE (V) <span id="volt-value" class="param-value">12.0 V</span></label>
+            <input type="range" id="voltage-slider" min="0" max="24" value="12" step="0.5">
+        </div>
+        <div class="resistor-toggle">
+            <div id="resistor-on" class="toggle-btn active">🔌 RESISTOR ON</div>
+            <div id="resistor-off" class="toggle-btn">🔋 RESISTOR OFF</div>
+        </div>
+        <div class="slider-group">
+            <label>🌡️ RESISTANCE (R) <span id="res-value" class="param-value">10 Ω</span></label>
+            <input type="range" id="resistance-slider" min="1" max="50" value="10" step="1">
+        </div>
+        <div id="current-indicator">
+            🔵 CURRENT (I) = <span id="current-display">1.20 A</span>
+        </div>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · ELECTRODYNAMICS LAB</div>
+
+    <!-- Three.js imports -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
+        
+        // --- SCENE ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        scene.fog = new THREE.FogExp2(0x050510, 0.003);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 6, 16);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.7;
+        renderer.shadowMap.enabled = false;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enableZoom = true;
+        controls.maxDistance = 30;
+        controls.minDistance = 5;
+
+        // --- POST PROCESSING (glow) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.3, 0.8);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 1.3;
+        bloomPass.radius = 0.4;
+
+        const filmPass = new FilmPass(0.2, 0.5, 2048, false);
+        filmPass.renderToScreen = true;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+        composer.addPass(filmPass);
+
+        // --- LIGHTING ---
+        const ambient = new THREE.AmbientLight(0x404060);
+        scene.add(ambient);
+
+        const keyLight = new THREE.DirectionalLight(0xaaccff, 1.2);
+        keyLight.position.set(5, 10, 8);
+        scene.add(keyLight);
+
+        const fillLight = new THREE.PointLight(0x4466ff, 0.8, 30);
+        fillLight.position.set(-5, 3, 6);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0xff44aa, 0.7, 30);
+        backLight.position.set(3, 2, -10);
+        scene.add(backLight);
+
+        // --- FUTURISTIC ENVIRONMENT (floating floor) ---
+        const floorGeo = new THREE.CylinderGeometry(10, 10, 0.2, 64);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x113355, emissive: 0x112233, transparent: true, opacity: 0.3 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.position.y = -0.5;
+        scene.add(floor);
+
+        // glowing rings
+        for (let i=0; i<3; i++) {
+            const ringGeo = new THREE.TorusGeometry(6 + i*1.5, 0.05, 16, 100);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x114477 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = -0.3;
+            scene.add(ring);
+        }
+
+        // floating particles (ambient)
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 400;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i=0; i<particleCount; i++) {
+            posArray[i*3] = (Math.random()-0.5)*30;
+            posArray[i*3+1] = (Math.random()-0.5)*10;
+            posArray[i*3+2] = (Math.random()-0.5)*30;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- CIRCUIT COMPONENTS ---
+        const circuitGroup = new THREE.Group();
+        
+        // Battery (voltage source) - left side
+        const batteryGeo = new THREE.CylinderGeometry(1.2, 1.2, 2, 16);
+        const batteryMat = new THREE.MeshStandardMaterial({ color: 0x44aa88, emissive: 0x114433 });
+        const battery = new THREE.Mesh(batteryGeo, batteryMat);
+        battery.position.set(-4, 0.5, 0);
+        battery.rotation.z = 0;
+        circuitGroup.add(battery);
+        
+        // battery terminals
+        const termGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.6);
+        const termMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0x442200 });
+        const termPlus = new THREE.Mesh(termGeo, termMat);
+        termPlus.position.set(-4, 1.6, 0);
+        circuitGroup.add(termPlus);
+        const termMinus = new THREE.Mesh(termGeo, termMat);
+        termMinus.position.set(-4, -0.6, 0);
+        circuitGroup.add(termMinus);
+
+        // Bulb (right side) - sphere with filament
+        const bulbGeo = new THREE.SphereGeometry(1.3, 32, 32);
+        const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffdd99, emissive: 0x442200, transparent: true, opacity: 0.9 });
+        const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+        bulb.position.set(4, 0.5, 0);
+        circuitGroup.add(bulb);
+        
+        // filament inside (glows)
+        const filamentGeo = new THREE.TorusKnotGeometry(0.5, 0.1, 64, 8);
+        const filamentMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff4400 });
+        const filament = new THREE.Mesh(filamentGeo, filamentMat);
+        filament.position.set(4, 0.5, 0);
+        circuitGroup.add(filament);
+
+        // Resistor (optional) - placed on top wire
+        const resistorGeo = new THREE.BoxGeometry(1.5, 0.6, 0.6);
+        const resistorMat = new THREE.MeshStandardMaterial({ color: 0xaa66cc, emissive: 0x331144 });
+        const resistor = new THREE.Mesh(resistorGeo, resistorMat);
+        resistor.position.set(0, 1.8, 0);
+        circuitGroup.add(resistor);
+        
+        // resistor stripes
+        for (let i=0; i<3; i++) {
+            const stripeGeo = new THREE.BoxGeometry(0.1, 0.4, 0.7);
+            const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffaa44 });
+            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+            stripe.position.set(-0.5 + i*0.5, 1.8, 0);
+            circuitGroup.add(stripe);
+        }
+
+        // Wires (glowing tubes) – we'll create a path: battery -> resistor -> bulb -> back to battery
+        function createWire(start, end, color, thickness=0.1) {
+            const points = [new THREE.Vector3(start[0], start[1], start[2]), new THREE.Vector3(end[0], end[1], end[2])];
+            const curve = new THREE.CatmullRomCurve3(points);
+            const tubeGeo = new THREE.TubeGeometry(curve, 20, thickness, 8, false);
+            const tubeMat = new THREE.MeshStandardMaterial({ color: color, emissive: 0x224466 });
+            return new THREE.Mesh(tubeGeo, tubeMat);
+        }
+
+        // top wire: battery top to resistor to bulb top
+        const wireTop1 = createWire([-2.8, 1.2, 0], [0, 1.8, 0], 0x44aaff);
+        const wireTop2 = createWire([0, 1.8, 0], [2.8, 1.2, 0], 0x44aaff);
+        circuitGroup.add(wireTop1);
+        circuitGroup.add(wireTop2);
+
+        // bottom wire: battery bottom to bulb bottom
+        const wireBottom = createWire([-2.8, -0.2, 0], [2.8, -0.2, 0], 0x44aaff);
+        circuitGroup.add(wireBottom);
+
+        // vertical connections
+        const wireVert1 = createWire([-4, -0.2, 0], [-4, 0.5, 0], 0x44aaff, 0.08);
+        const wireVert2 = createWire([-4, 0.5, 0], [-4, 1.2, 0], 0x44aaff, 0.08);
+        circuitGroup.add(wireVert1);
+        circuitGroup.add(wireVert2);
+        
+        const wireVert3 = createWire([4, -0.2, 0], [4, 0.5, 0], 0x44aaff, 0.08);
+        const wireVert4 = createWire([4, 0.5, 0], [4, 1.2, 0], 0x44aaff, 0.08);
+        circuitGroup.add(wireVert3);
+        circuitGroup.add(wireVert4);
+
+        scene.add(circuitGroup);
+
+        // --- CURRENT FLOW PARTICLES (electrons) ---
+        const electronCount = 80;
+        const electrons = [];
+        const electronPositions = [];
+
+        // create small glowing blue spheres
+        for (let i = 0; i < electronCount; i++) {
+            const geo = new THREE.SphereGeometry(0.12, 8, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x33aaff, emissive: 0x114488 });
+            const sphere = new THREE.Mesh(geo, mat);
+            
+            // initial positions along the circuit path
+            const t = i / electronCount;
+            // path goes: start at battery top -> wire -> resistor -> bulb top -> bulb bottom -> wire -> battery bottom -> battery top again (simplified loop)
+            // we'll just animate along a spline later
+            sphere.userData = { offset: i * 0.1, speed: 0.01 };
+            
+            scene.add(sphere);
+            electrons.push(sphere);
+        }
+
+        // create current direction arrows (small glowing cones)
+        const arrows = [];
+        for (let i = 0; i < 12; i++) {
+            const arrowGroup = new THREE.Group();
+            const coneGeo = new THREE.ConeGeometry(0.15, 0.5, 8);
+            const coneMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 });
+            const cone = new THREE.Mesh(coneGeo, coneMat);
+            cone.position.y = 0.25;
+            arrowGroup.add(cone);
+            
+            const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.6);
+            const stemMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 });
+            const stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.y = -0.3;
+            arrowGroup.add(stem);
+            
+            arrowGroup.position.set(0, 0, 0);
+            scene.add(arrowGroup);
+            arrows.push(arrowGroup);
+        }
+
+        // --- UI VARIABLES ---
+        let voltage = 12.0;
+        let resistance = 10.0;
+        let resistorEnabled = true;
+
+        const voltageSlider = document.getElementById('voltage-slider');
+        const resistanceSlider = document.getElementById('resistance-slider');
+        const voltValue = document.getElementById('volt-value');
+        const resValue = document.getElementById('res-value');
+        const currentDisplay = document.getElementById('current-display');
+        const btnOn = document.getElementById('resistor-on');
+        const btnOff = document.getElementById('resistor-off');
+
+        btnOn.addEventListener('click', () => {
+            btnOn.classList.add('active');
+            btnOff.classList.remove('active');
+            resistorEnabled = true;
+            resistanceSlider.disabled = false;
+            updateResistorVisibility(true);
+        });
+        btnOff.addEventListener('click', () => {
+            btnOff.classList.add('active');
+            btnOn.classList.remove('active');
+            resistorEnabled = false;
+            resistanceSlider.disabled = true;
+            updateResistorVisibility(false);
+        });
+
+        function updateResistorVisibility(visible) {
+            resistor.visible = visible;
+            // also hide stripes
+            circuitGroup.children.forEach(child => {
+                if (child.isMesh && child.material && child.material.color.getHex() === 0xffaa44 && child.position.y > 1.5) {
+                    child.visible = visible;
+                }
+            });
+        }
+
+        voltageSlider.addEventListener('input', (e) => {
+            voltage = parseFloat(e.target.value);
+            voltValue.textContent = voltage.toFixed(1) + ' V';
+            updateCurrent();
+        });
+        resistanceSlider.addEventListener('input', (e) => {
+            resistance = parseFloat(e.target.value);
+            resValue.textContent = resistance + ' Ω';
+            updateCurrent();
+        });
+
+        function updateCurrent() {
+            const r = resistorEnabled ? resistance : 0.5; // very low resistance when off (wire)
+            const current = voltage / r;
+            currentDisplay.textContent = current.toFixed(2) + ' A';
+            
+            // adjust bulb brightness (emissive intensity)
+            const intensity = Math.min(1.5, current / 2);
+            filament.material.emissive.setHSL(0.05, 1, intensity * 0.5);
+            bulb.material.emissive.setHSL(0.1, 1, intensity * 0.3);
+            
+            // electron speed proportional to current
+            electrons.forEach(e => { e.userData.speed = 0.005 + current * 0.01; });
+        }
+
+        // initial update
+        updateCurrent();
+
+        // --- ANIMATION LOOP (electron flow) ---
+        const clock = new THREE.Clock();
+
+        // define a closed loop path for electrons (simplified)
+        function getElectronPosition(t) {
+            // t in [0,1] loops around circuit
+            // path: battery top (A) -> resistor -> bulb top (B) -> down bulb -> bulb bottom (C) -> wire back -> battery bottom (D) -> up battery -> A
+            const loop = [
+                [-4, 1.2, 0], // A
+                [0, 1.8, 0],   // resistor
+                [4, 1.2, 0],   // B
+                [4, -0.2, 0],  // C
+                [-4, -0.2, 0], // D
+                [-4, 1.2, 0]   // back to A
+            ];
+            // map t to segments
+            const segCount = loop.length - 1;
+            const seg = Math.floor(t * segCount);
+            const segT = (t * segCount) - seg;
+            const start = loop[seg];
+            const end = loop[seg+1];
+            const x = start[0] + (end[0]-start[0]) * segT;
+            const y = start[1] + (end[1]-start[1]) * segT;
+            const z = start[2] + (end[2]-start[2]) * segT;
+            return new THREE.Vector3(x, y, z);
+        }
+
+        function animate() {
+            const delta = clock.getDelta();
+            const time = performance.now() * 0.001;
+
+            // move electrons
+            electrons.forEach((e, idx) => {
+                let t = (time * e.userData.speed + idx * 0.01) % 1.0;
+                const pos = getElectronPosition(t);
+                e.position.copy(pos);
+            });
+
+            // position arrows along wire (static but indicate direction)
+            arrows.forEach((arr, i) => {
+                const t = (i / arrows.length) * 0.8; // distribute
+                const pos = getElectronPosition(t);
+                arr.position.copy(pos);
+                // orient along path tangent (approximate)
+                const pos2 = getElectronPosition(t + 0.02);
+                arr.lookAt(pos2);
+            });
+
+            // rotate auto
+            controls.update();
+
+            composer.render();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('Circuit lab ready');
+    </script>
+</body>
+</html>
