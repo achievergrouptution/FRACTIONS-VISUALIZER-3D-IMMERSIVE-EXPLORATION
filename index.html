@@ -174,7 +174,7 @@
     }
     .about-item i { font-size: 3rem; color: #0a0f2e; margin-bottom: 1rem; text-shadow: 0 0 10px cyan; }
 
-    /* visual lab (10 concepts) */
+    /* visual lab (10 concepts with href links) */
     .lab-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
@@ -185,10 +185,12 @@
       background: white;
       border-radius: 40px;
       padding: 1.5rem;
-      cursor: pointer;
       border: 1px solid cyan;
       transition: 0.25s;
       text-align: center;
+      text-decoration: none;
+      color: inherit;
+      display: block;
     }
     .lab-item:hover {
       transform: scale(1.02) translateY(-8px);
@@ -251,7 +253,7 @@
     .float-call { position: fixed; bottom: 100px; right: 30px; background: #0a0f2e; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 20px cyan; z-index: 99; }
     @media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2,1fr); } }
 
-    /* free demo hyperlink space */
+    /* demo hyperlink space replaced — now shows working link to demo page */
     .demo-upload-space {
       background: white;
       border-radius: 60px;
@@ -306,9 +308,8 @@
       <div style="margin: 1.5rem 0; display: flex; flex-wrap: wrap; align-items: center;">
         <!-- Enroll Now triggers PDF download -->
         <a href="#" id="enrollPdfBtn" class="btn btn-primary"><i class="fas fa-download"></i> Enroll Now (PDF info)</a>
-        <!-- Only one Free Demo button now (links to demo space) -->
+        <!-- Free Demo link points to the new permanent demo section -->
         <a href="#demo-space" class="btn btn-cyan"><i class="fas fa-graduation-cap"></i> Free Demo</a>
-        <!-- Contact Us at the end -->
         <a href="#contact" class="btn btn-outline">Contact Us</a>
       </div>
       <div><i class="fas fa-phone-alt"></i> +91 9228283100  |  +91 8160585114</div>
@@ -317,7 +318,6 @@
     <div class="hero-poster" title="advertisement poster"></div>
   </section>
 
- 
   <!-- ABOUT (6 subjects) -->
   <section id="about" style="padding: 4rem 5%;">
     <h2 class="section-title">📘 About Us — 6 subjects mastery</h2>
@@ -330,7 +330,7 @@
     </div>
   </section>
 
-  <!-- VISUAL LEARNING LAB (10 concepts only - no grades) -->
+  <!-- VISUAL LEARNING LAB (10 concepts with exact hrefs) -->
   <section id="visual" style="padding: 4rem 5%;">
     <h2 class="section-title">🧪 Visual Learning Lab – 10 Interactive Demos</h2>
     <div class="lab-grid" id="labGrid"></div>
@@ -342,7 +342,7 @@
     <div class="gallery-grid" id="galleryGrid"></div>
   </section>
 
-  <!-- HOME TUTORING (fixed working button) -->
+  <!-- HOME TUTORING -->
   <section style="padding: 4rem 5%;">
     <h2 class="section-title">🏠 Premium Home Tutoring (all 6 subjects)</h2>
     <div class="tutoring-grid">
@@ -360,6 +360,14 @@
         </div>
       </div>
       <div style="flex:1; background: url('https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80') center/cover; border-radius: 60px;"></div>
+    </div>
+  </section>
+
+  <!-- FREE DEMO SPACE: replaced with YOUR demo hyperlink (concepts/demo.html) as requested -->
+  <section id="demo-space" style="padding: 2rem 5%;">
+    <div class="demo-upload-space">
+      <a href="concepts/demo.html" target="_blank"><i class="fas fa-flask"></i> YOUR DEMO IS HERE <i class="fas fa-arrow-right"></i></a>
+      <p style="margin-top: 1.5rem; font-size: 1.2rem;">Click above to access the interactive demo (concepts/demo.html)</p>
     </div>
   </section>
 
@@ -418,12 +426,6 @@ Or contact: +91 9228283100`;
         window.URL.revokeObjectURL(url);
       });
 
-      // ---------- FREE DEMO HYPERLINK ----------
-      document.getElementById('freeDemoLink').addEventListener('click', function(e) {
-        e.preventDefault();
-        alert('🔗 Hyperlink ready! Replace "#" with your uploaded demo file link.');
-      });
-
       // ---------- FIXED BOOK TUTOR BUTTON ----------
       document.getElementById('bookTutorBtn').addEventListener('click', function() {
         const name = document.getElementById('tutorName').value.trim();
@@ -437,26 +439,32 @@ Or contact: +91 9228283100`;
         alert(`✅ Booking request sent for ${name} (Grade ${grade}, ${subject}). Tutor will contact you soon.`);
       });
 
-      // ---------- VISUAL LAB: 10 concepts (no grades) ----------
+      // ---------- VISUAL LAB: 10 concepts with EXACT hrefs as requested ----------
       const lab = document.getElementById('labGrid');
       const concepts = [
-        { name: 'Fractions Visualizer', img: 'https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=400', desc: 'See fractions come alive',<a href="concepts/fractions.html">Fractions Visualizer</a> },
-        { name: 'Pythagoras Theorem Animation', img: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400', desc: 'Interactive proof' },
-        { name: 'Solar System 3D Model', img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', desc: 'Orbit and gravity' },
-        { name: 'States of Matter Simulation', img: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400', desc: 'Solid, liquid, gas' },
-        { name: 'Electricity Flow Model', img: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400', desc: 'Circuits & current' },
-        { name: 'Geometry Shape Builder', img: 'https://images.unsplash.com/photo-1635107510862-53886e926b74?w=400', desc: 'Construct 2D/3D' },
-        { name: 'Trigonometry Unit Circle', img: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400', desc: 'Sin, cos, tan' },
-        { name: 'Force & Motion Lab', img: 'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=400', desc: 'Newton\'s laws' },
-        { name: 'Human Heart Animation', img: 'https://images.unsplash.com/photo-1579154336196-0d9a9e3a78f3?w=400', desc: '3D beating heart' },
-        { name: 'Algebra Graph Explorer', img: 'https://images.unsplash.com/photo-1549421263-606ec3c5acb2?w=400', desc: 'Plot equations' }
+        { name: 'Fractions Visualizer', file: 'fractions.html', img: 'https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=400', desc: 'See fractions come alive' },
+        { name: 'Pythagoras Theorem', file: 'pythagoras.html', img: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400', desc: 'Interactive proof' },
+        { name: 'Solar System 3D', file: 'solar-system.html', img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', desc: 'Orbit and gravity' },
+        { name: 'States of Matter', file: 'states-of-matter.html', img: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400', desc: 'Solid, liquid, gas' },
+        { name: 'Electricity Flow', file: 'electricity.html', img: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400', desc: 'Circuits & current' },
+        { name: 'Geometry Builder', file: 'geometry.html', img: 'https://images.unsplash.com/photo-1635107510862-53886e926b74?w=400', desc: 'Construct 2D/3D' },
+        { name: 'Trigonometry Unit Circle', file: 'trigonometry.html', img: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400', desc: 'Sin, cos, tan' },
+        { name: 'Force & Motion Lab', file: 'force-motion.html', img: 'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=400', desc: 'Newton\'s laws' },
+        { name: 'Human Heart Animation', file: 'heart.html', img: 'https://images.unsplash.com/photo-1579154336196-0d9a9e3a78f3?w=400', desc: '3D beating heart' },
+        { name: 'Algebra Graph Explorer', file: 'algebra.html', img: 'https://images.unsplash.com/photo-1549421263-606ec3c5acb2?w=400', desc: 'Plot equations' }
       ];
       concepts.forEach(c => {
-        let item = document.createElement('div');
-        item.className = 'lab-item';
-        item.innerHTML = `<img src="${c.img}" alt="${c.name}"><h4>${c.name}</h4><p>${c.desc}</p>`;
-        item.addEventListener('click', ()=> alert(`🚀 Opening interactive: ${c.name}\n(Full 3D simulation + explainer video)`));
-        lab.appendChild(item);
+        let a = document.createElement('a');
+        a.className = 'lab-item';
+        a.href = 'concepts/' + c.file;   // e.g. concepts/fractions.html
+        a.target = '_blank'; // open in new tab (optional but good for demos)
+        a.innerHTML = `<img src="${c.img}" alt="${c.name}"><h4>${c.name}</h4><p>${c.desc}</p>`;
+        // optional click tracking but keep hyperlink
+        a.addEventListener('click', function(e) {
+          // let the href work normally; we just optionally track
+          console.log('navigating to ' + a.href);
+        });
+        lab.appendChild(a);
       });
 
       // ---------- GALLERY ----------
@@ -477,6 +485,9 @@ Or contact: +91 9228283100`;
         div.style.backgroundImage = `url(${src})`;
         gallery.appendChild(div);
       });
+
+      // ---------- DEMO SPACE ALREADY HARDCODED with <a href="concepts/demo.html"> ----------
+      // no extra code needed
     })();
   </script>
   <style>
