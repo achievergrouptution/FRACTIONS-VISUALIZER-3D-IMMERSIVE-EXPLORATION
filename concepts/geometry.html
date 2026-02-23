@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Shape Builder · 3D Construction Space</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', 'Arial', sans-serif;
+            background-color: #0a0a18;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 20, 35, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid #88ccff;
+            border-radius: 40px;
+            padding: 18px 32px;
+            color: white;
+            box-shadow: 0 0 50px #88ccff88;
+            z-index: 20;
+            border-left: 6px solid #6cf;
+        }
+        #hud h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px cyan;
+        }
+        #hud .sub {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            color: #ccf;
+        }
+        #measure-panel {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(5, 15, 30, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid #ffaa66;
+            border-radius: 50px;
+            padding: 28px 35px;
+            width: 300px;
+            color: white;
+            box-shadow: 0 0 80px #ffaa6688;
+            z-index: 30;
+            border-bottom: 4px solid orange;
+            pointer-events: none;
+        }
+        #measure-panel h3 {
+            margin: 0 0 20px 0;
+            font-weight: 300;
+            font-size: 1.8rem;
+            color: #ffcc88;
+            text-align: center;
+            text-shadow: 0 0 15px orange;
+        }
+        .measure-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3rem;
+            margin: 15px 0;
+            border-bottom: 1px solid #336699;
+            padding-bottom: 5px;
+        }
+        .measure-label {
+            color: #aac;
+        }
+        .measure-value {
+            font-weight: 600;
+            background: linear-gradient(45deg, #ffaa66, #ff66cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #selected-info {
+            font-size: 1.1rem;
+            color: #aaf;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #acf;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 28px;
+            border-radius: 50px;
+            border: 1px solid #9cf;
+            z-index: 40;
+            font-size: 1rem;
+        }
+        #controls-note {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #ccf;
+            background: rgba(20,0,30,0.5);
+            backdrop-filter: blur(5px);
+            padding: 8px 22px;
+            border-radius: 40px;
+            border: 1px solid #f6f;
+            font-size: 0.95rem;
+        }
+        .glow-select {
+            text-shadow: 0 0 15px #ffaa00;
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <h1>📐 GEOMETRY SHAPE BUILDER</h1>
+        <div class="sub">drag vertices · form triangles, cubes, pyramids · live area/volume</div>
+    </div>
+    <div id="controls-note">✧ drag white points · shift+click to select shape ✧</div>
+
+    <div id="measure-panel">
+        <h3>📊 LIVE MEASUREMENTS</h3>
+        <div class="measure-row"><span class="measure-label">Area (selected)</span> <span id="area-value" class="measure-value">0.00</span></div>
+        <div class="measure-row"><span class="measure-label">Volume (selected)</span> <span id="volume-value" class="measure-value">0.00</span></div>
+        <div class="measure-row"><span class="measure-label">Angles (avg)</span> <span id="angle-value" class="measure-value">—</span></div>
+        <div id="selected-info">⚪ no shape selected</div>
+    </div>
+
+    <div id="footer">© 2026 ACHIEVER GROUP TUTIONS · ADVANCED ARCHITECTURE LAB</div>
+
+    <!-- Three.js and dependencies -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { DragControls } from 'three/addons/controls/DragControls.js';
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0c0c20);
+        scene.fog = new THREE.FogExp2(0x0c0c20, 0.004);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(12, 8, 18);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = 1.6;
+        renderer.shadowMap.enabled = false;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.maxDistance = 40;
+        controls.minDistance = 5;
+
+        // --- POST PROCESSING (soft glow) ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.2, 0.7);
+        bloomPass.threshold = 0.1;
+        bloomPass.strength = 0.9;
+        bloomPass.radius = 0.3;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- LIGHTING (soft depth) ---
+        const ambient = new THREE.AmbientLight(0x40406b);
+        scene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xccddff, 1.2);
+        dirLight.position.set(5, 12, 8);
+        scene.add(dirLight);
+
+        const fillLight = new THREE.PointLight(0x6688ff, 0.8, 30);
+        fillLight.position.set(-5, 5, 8);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0xff88aa, 0.5, 30);
+        backLight.position.set(2, 3, -12);
+        scene.add(backLight);
+
+        // --- CLEAN DIGITAL BACKGROUND (grid floor + floating lines) ---
+        const gridHelper = new THREE.GridHelper(30, 40, 0x66aaff, 0x335588);
+        gridHelper.position.y = -0.5;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // floating digital rings
+        for (let i=0; i<3; i++) {
+            const ringGeo = new THREE.TorusGeometry(7 + i*1.8, 0.05, 16, 100);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, emissive: 0x113366 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI/2;
+            ring.position.y = -0.2;
+            scene.add(ring);
+        }
+
+        // vertical light pillars (ambient)
+        for (let i=0; i<6; i++) {
+            const angle = (i/6)*Math.PI*2;
+            const x = Math.cos(angle)*9;
+            const z = Math.sin(angle)*9;
+            const pillarGeo = new THREE.CylinderGeometry(0.1, 0.2, 5, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x5599ff, emissive: 0x113366 });
+            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar.position.set(x, 2.0, z);
+            scene.add(pillar);
+        }
+
+        // floating particles (dust)
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 500;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i=0; i<particleCount; i++) {
+            posArray[i*3] = (Math.random()-0.5)*40;
+            posArray[i*3+1] = (Math.random()-0.5)*20;
+            posArray[i*3+2] = (Math.random()-0.5)*40;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- CONSTRUCTION ELEMENTS: VERTICES (points) and LINES ---
+        // Predefine a set of points in space (floating)
+        const points = [];
+        const pointMeshes = [];
+        
+        // Create 8 points forming a rough cube + extras for pyramid
+        const initialPositions = [
+            [-3, 0, -3], [3, 0, -3], [3, 0, 3], [-3, 0, 3], // base
+            [-2, 3, -2], [2, 3, -2], [2, 3, 2], [-2, 3, 2], // top
+            [0, 5, 0] // apex for pyramid
+        ];
+
+        initialPositions.forEach((pos, idx) => {
+            const geo = new THREE.SphereGeometry(0.35, 16, 16);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200 });
+            const sphere = new THREE.Mesh(geo, mat);
+            sphere.position.set(pos[0], pos[1], pos[2]);
+            sphere.castShadow = true;
+            sphere.receiveShadow = false;
+            sphere.userData = { index: idx, originalColor: 0xffaa66 };
+            scene.add(sphere);
+            pointMeshes.push(sphere);
+            points.push(sphere.position);
+        });
+
+        // Lines connecting points (dynamic – we'll update based on shape selection)
+        // We'll maintain an array of line segments and rebuild when points move or shape changes.
+        let lines = [];
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x88ccff });
+
+        function updateLines(selectedIndices) {
+            // remove old lines
+            lines.forEach(line => scene.remove(line));
+            lines = [];
+            
+            if (!selectedIndices || selectedIndices.length < 2) return;
+            
+            // connect points in order (for simplicity, connect consecutive in list, and close if first/last)
+            for (let i = 0; i < selectedIndices.length; i++) {
+                const j = (i + 1) % selectedIndices.length;
+                const p1 = pointMeshes[selectedIndices[i]].position;
+                const p2 = pointMeshes[selectedIndices[j]].position;
+                
+                const pointsArray = [p1.clone(), p2.clone()];
+                const geo = new THREE.BufferGeometry().setFromPoints(pointsArray);
+                const line = new THREE.Line(geo, lineMaterial);
+                scene.add(line);
+                lines.push(line);
+            }
+        }
+
+        // --- SHAPE SELECTION LOGIC ---
+        let selectedShape = null; // array of point indices
+        let selectedMeshes = []; // references to point meshes that are selected (for glow)
+
+        function highlightPoints(indices) {
+            // reset all to original color
+            pointMeshes.forEach(p => p.material.color.setHex(0xffaa66));
+            if (!indices) return;
+            indices.forEach(i => {
+                if (pointMeshes[i]) pointMeshes[i].material.color.setHex(0xffdd88);
+            });
+        }
+
+        // predefine some shapes: cube (0-7), pyramid (0,1,2,3,8)
+        const shapes = {
+            cube: [0,1,2,3,4,5,6,7], // 8 points
+            pyramid: [0,1,2,3,8] // base 0-3 + apex 8
+        };
+
+        // UI for shape selection (simple keyboard: press 1 for cube, 2 for pyramid)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '1') {
+                selectedShape = shapes.cube;
+                highlightPoints(selectedShape);
+                updateLines(selectedShape);
+                updateMeasurements(selectedShape);
+                document.getElementById('selected-info').innerHTML = '🔷 selected: CUBE';
+            } else if (e.key === '2') {
+                selectedShape = shapes.pyramid;
+                highlightPoints(selectedShape);
+                updateLines(selectedShape);
+                updateMeasurements(selectedShape);
+                document.getElementById('selected-info').innerHTML = '🔺 selected: PYRAMID';
+            } else if (e.key === 'Escape') {
+                selectedShape = null;
+                highlightPoints(null);
+                updateLines(null);
+                document.getElementById('selected-info').innerHTML = '⚪ no shape selected';
+                document.getElementById('area-value').textContent = '0.00';
+                document.getElementById('volume-value').textContent = '0.00';
+                document.getElementById('angle-value').textContent = '—';
+            }
+        });
+
+        // --- MEASUREMENT FUNCTIONS (live updates) ---
+        function updateMeasurements(indices) {
+            if (!indices || indices.length < 3) {
+                document.getElementById('area-value').textContent = '0.00';
+                document.getElementById('volume-value').textContent = '0.00';
+                document.getElementById('angle-value').textContent = '—';
+                return;
+            }
+
+            // Compute area of first face (for demo: for cube, take first 4 points as base)
+            if (indices.length === 8) { // cube
+                const p0 = pointMeshes[0].position;
+                const p1 = pointMeshes[1].position;
+                const p2 = pointMeshes[2].position;
+                const p3 = pointMeshes[3].position;
+                // area of quadrilateral (approx) - simple polygon area
+                const area = computePolygonArea([p0, p1, p2, p3]);
+                // volume of cube (approx)
+                const side = p0.distanceTo(p1);
+                const volume = Math.pow(side, 3);
+                document.getElementById('area-value').textContent = area.toFixed(2);
+                document.getElementById('volume-value').textContent = volume.toFixed(2);
+                document.getElementById('angle-value').textContent = '90°';
+            } else if (indices.length === 5) { // pyramid
+                const baseIndices = indices.slice(0,4);
+                const apex = pointMeshes[8].position;
+                const p0 = pointMeshes[0].position;
+                const p1 = pointMeshes[1].position;
+                const p2 = pointMeshes[2].position;
+                const p3 = pointMeshes[3].position;
+                const baseArea = computePolygonArea([p0, p1, p2, p3]);
+                // approximate height (distance from apex to base plane)
+                const baseCenter = new THREE.Vector3().addVectors(p0, p2).multiplyScalar(0.5);
+                const height = Math.abs(apex.y - baseCenter.y);
+                const volume = (baseArea * height) / 3;
+                document.getElementById('area-value').textContent = baseArea.toFixed(2);
+                document.getElementById('volume-value').textContent = volume.toFixed(2);
+                document.getElementById('angle-value').textContent = 'var';
+            } else {
+                // triangle
+                if (indices.length === 3) {
+                    const p0 = pointMeshes[indices[0]].position;
+                    const p1 = pointMeshes[indices[1]].position;
+                    const p2 = pointMeshes[indices[2]].position;
+                    const area = computeTriangleArea(p0, p1, p2);
+                    document.getElementById('area-value').textContent = area.toFixed(2);
+                    document.getElementById('volume-value').textContent = '0.00';
+                    // angles
+                    const a = p0.angleTo(p1) * 180/Math.PI;
+                    document.getElementById('angle-value').textContent = a.toFixed(1) + '°';
+                }
+            }
+        }
+
+        function computePolygonArea(points) {
+            // points are Vector3, assume planar
+            if (points.length < 3) return 0;
+            // use first point as reference
+            const ref = points[0];
+            let area = 0;
+            for (let i = 1; i < points.length-1; i++) {
+                area += computeTriangleArea(ref, points[i], points[i+1]);
+            }
+            return area;
+        }
+
+        function computeTriangleArea(p1, p2, p3) {
+            const v1 = new THREE.Vector3().subVectors(p2, p1);
+            const v2 = new THREE.Vector3().subVectors(p3, p1);
+            const cross = new THREE.Vector3().crossVectors(v1, v2);
+            return cross.length() * 0.5;
+        }
+
+        // --- DRAG CONTROLS for vertices ---
+        const dragControls = new DragControls(pointMeshes, camera, renderer.domElement);
+        dragControls.addEventListener('dragstart', function(event) {
+            controls.enabled = false;
+        });
+        dragControls.addEventListener('drag', function(event) {
+            // update lines and measurements in real time
+            if (selectedShape) {
+                updateLines(selectedShape);
+                updateMeasurements(selectedShape);
+            }
+        });
+        dragControls.addEventListener('dragend', function(event) {
+            controls.enabled = true;
+        });
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // subtle floating for points? not needed
+
+            controls.update();
+            composer.render();
+        }
+
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // hint
+        console.log('Geometry builder ready — press 1 for cube, 2 for pyramid, drag white points');
+    </script>
+</body>
+</html>
