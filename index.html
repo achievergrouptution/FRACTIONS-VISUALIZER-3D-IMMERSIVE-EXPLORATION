@@ -253,18 +253,32 @@
     .float-call { position: fixed; bottom: 100px; right: 30px; background: #0a0f2e; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 20px cyan; z-index: 99; }
     @media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2,1fr); } }
 
-    /* address block styling */
-    .address-block {
-      background: rgba(0,242,254,0.1);
-      padding: 1.5rem;
-      border-radius: 40px;
-      margin-top: 2rem;
-      border: 1px dashed var(--accent-neon);
-      font-weight: 500;
+    /* demo hyperlink space replaced — now shows working link to demo page */
+    .demo-upload-space {
+      background: white;
+      border-radius: 60px;
+      padding: 2.5rem;
+      margin: 3rem 0;
+      text-align: center;
+      border: 2px dashed cyan;
     }
-    .address-block i {
-      color: var(--accent-neon);
-      margin-right: 10px;
+    .demo-upload-space a {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0a0f2e;
+      text-decoration: none;
+      background: #eef5ff;
+      padding: 1rem 3rem;
+      border-radius: 60px;
+      display: inline-block;
+      transition: 0.3s;
+      border: 2px solid cyan;
+    }
+    .demo-upload-space a:hover {
+      background: #0a0f2e;
+      color: white;
+      box-shadow: 0 0 40px cyan;
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -282,7 +296,7 @@
     </div>
   </nav>
 
-  <!-- HERO -->
+  <!-- HERO (Early bird only) -->
   <section class="hero">
     <div class="hero-content">
       <div class="badge-wrapper">
@@ -292,9 +306,10 @@
       <h1>Achievers Group Tuition & Home Tutoring</h1>
       <div class="hero-tagline">Not Just Teaching – We Build Thinkers</div>
       <div style="margin: 1.5rem 0; display: flex; flex-wrap: wrap; align-items: center;">
+        <!-- Enroll Now triggers PDF download -->
         <a href="#" id="enrollPdfBtn" class="btn btn-primary"><i class="fas fa-download"></i> Enroll Now (PDF info)</a>
-        <!-- Free Demo button now points to first visual lab item (or any anchor) -->
-        <a href="#visual" class="btn btn-cyan"><i class="fas fa-graduation-cap"></i> Free Demo</a>
+        <!-- Free Demo link points to the new permanent demo section -->
+        <a href="#demo-space" class="btn btn-cyan"><i class="fas fa-graduation-cap"></i> Free Demo</a>
         <a href="#contact" class="btn btn-outline">Contact Us</a>
       </div>
       <div><i class="fas fa-phone-alt"></i> +91 9228283100  |  +91 8160585114</div>
@@ -315,7 +330,7 @@
     </div>
   </section>
 
-  <!-- VISUAL LEARNING LAB (10 concepts with fixed images for algebra & heart) -->
+  <!-- VISUAL LEARNING LAB (10 concepts with exact hrefs) -->
   <section id="visual" style="padding: 4rem 5%;">
     <h2 class="section-title">🧪 Visual Learning Lab – 10 Interactive Demos</h2>
     <div class="lab-grid" id="labGrid"></div>
@@ -348,28 +363,31 @@
     </div>
   </section>
 
-  <!-- CONTACT & MAP + FULL ADDRESS (as requested) -->
+  <!-- FREE DEMO SPACE: replaced with YOUR demo hyperlink (concepts/demo.html) as requested -->
+  <section id="demo-space" style="padding: 2rem 5%;">
+    <div class="demo-upload-space">
+      <a href="concepts/demo.html" target="_blank"><i class="fas fa-flask"></i> YOUR DEMO IS HERE <i class="fas fa-arrow-right"></i></a>
+      <p style="margin-top: 1.5rem; font-size: 1.2rem;">Click above to access the interactive demo (concepts/demo.html)</p>
+    </div>
+  </section>
+
+  <!-- CONTACT + MAP -->
   <section id="contact" style="padding: 4rem 5%;">
     <h2 class="section-title">📱 Contact & location</h2>
-    <!-- Full address block prominently displayed -->
-    <div class="address-block">
-      <i class="fas fa-map-pin"></i> <strong>Visit us:</strong> E Block Sahajanand Helenium, Opp Aradhya Homes, B/H Satyamev Hospital Zundal, Gandhinagar, Gujarat 382424
-    </div>
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3665.248915512282!2d72.677515!3d23.073516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e870c3fffffff%3A0xcf427c3f32e12345!2sSahajanand%20Helenium!5e0!3m2!1sen!2sin!4v1713000000000" width="100%" height="300" style="border:0; border-radius:60px;" allowfullscreen loading="lazy"></iframe>
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15282225.799849752!2d72.158189!3d21.161431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDA5JzQxLjIiTiA3MsKwMDknNTEuMCJF!5e0!3m2!1sen!2sin!4v1712500000000" width="100%" height="300" style="border:0; border-radius:60px;" allowfullscreen></iframe>
     <div style="margin:2rem 0; display: flex; gap: 3rem; flex-wrap: wrap;">
       <div><i class="fas fa-phone"></i> +91 9228283100 / 8160585114</div>
       <div><i class="far fa-envelope"></i> achievergrouptution@gmail.com</div>
     </div>
   </section>
 
-  <!-- FOOTER with address repeated for consistency -->
+  <!-- FOOTER with 2026 Achievers Group Tuition -->
   <footer class="footer">
     <div style="display:flex; flex-wrap:wrap; gap:4rem;">
       <div>
         <h3>Achievers Group Tuition & Home Tutoring</h3>
         <p>+91 9228283100 · +91 8160585114</p>
         <p><i class="far fa-envelope"></i> achievergrouptution@gmail.com</p>
-        <p style="margin-top:1rem;"><i class="fas fa-map-marker-alt"></i> E Block Sahajanand Helenium, Opp Aradhya Homes, B/H Satyamev Hospital Zundal, Gandhinagar 382424</p>
       </div>
       <div><h4>Quick links</h4><p>Home · About · Visual Lab · Contact</p></div>
       <div><h4>Social</h4><i class="fab fa-facebook fa-2x"></i> <i class="fab fa-instagram fa-2x"></i></div>
@@ -379,7 +397,7 @@
 
   <script>
     (function() {
-      // PDF download
+      // ---------- PDF DOWNLOAD for Enroll Now ----------
       document.getElementById('enrollPdfBtn').addEventListener('click', function(e) {
         e.preventDefault();
         const content = `ACHIEVERS GROUP TUITION & HOME TUTORING
@@ -395,8 +413,7 @@ Subjects (6 available): Maths, Science, English, SST, Gujarati, Hindi
 Mode: Group / Home Tutoring
 ----------------------------------------
 Please fill and return to: achievergrouptution@gmail.com
-Or contact: +91 9228283100
-Address: E Block Sahajanand Helenium, Opp Aradhya Homes, B/H Satyamev Hospital Zundal, Gandhinagar, Gujarat 382424`;
+Or contact: +91 9228283100`;
 
         const blob = new Blob([content], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
@@ -409,44 +426,48 @@ Address: E Block Sahajanand Helenium, Opp Aradhya Homes, B/H Satyamev Hospital Z
         window.URL.revokeObjectURL(url);
       });
 
-      // Book tutor button
+      // ---------- FIXED BOOK TUTOR BUTTON ----------
       document.getElementById('bookTutorBtn').addEventListener('click', function() {
         const name = document.getElementById('tutorName').value.trim();
         const grade = document.getElementById('tutorGrade').value.trim();
         const phone = document.getElementById('tutorPhone').value.trim();
+        const subject = document.getElementById('tutorSubject').value;
         if (!name || !grade || !phone) {
           alert('Please fill at least name, grade and phone.');
           return;
         }
-        alert(`✅ Booking request sent for ${name}. Tutor will contact you soon.`);
+        alert(`✅ Booking request sent for ${name} (Grade ${grade}, ${subject}). Tutor will contact you soon.`);
       });
 
-      // ---------- VISUAL LAB: 10 concepts with working images (algebra + heart fixed) ----------
+      // ---------- VISUAL LAB: 10 concepts with EXACT hrefs as requested ----------
       const lab = document.getElementById('labGrid');
       const concepts = [
-        { name: 'Fractions Visualizer', file: 'fractions.html', img: 'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'See fractions come alive' },
-        { name: 'Pythagoras Theorem', file: 'pythagoras.html', img: 'https://images.pexels.com/photos/163507/board-math-classroom-school-163507.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Interactive proof' },
-        { name: 'Solar System 3D', file: 'solar-system.html', img: 'https://images.pexels.com/photos/924824/pexels-photo-924824.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Orbit and gravity' },
-        { name: 'States of Matter', file: 'states-of-matter.html', img: 'https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Solid, liquid, gas' },
-        { name: 'Electricity Flow', file: 'electricity.html', img: 'https://images.pexels.com/photos/356040/pexels-photo-356040.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Circuits & current' },
-        { name: 'Geometry Builder', file: 'geometry.html', img: 'https://images.pexels.com/photos/163064/play-stone-network-networked-interactive-163064.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Construct 2D/3D' },
-        { name: 'Trigonometry Unit Circle', file: 'trigonometry.html', img: 'https://images.pexels.com/photos/163100/circuit-circuit-board-resistor-computer-163100.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Sin, cos, tan' },
-        { name: 'Force & Motion Lab', file: 'force-motion.html', img: 'https://images.pexels.com/photos/163064/play-stone-network-networked-interactive-163064.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Newton\'s laws' },
-        // FIXED HEART IMAGE (reliable pexels)
-        { name: 'Human Heart Animation', file: 'heart.html', img: 'https://images.pexels.com/photos/3993215/pexels-photo-3993215.jpeg?auto=compress&cs=tinysrgb&w=400', desc: '3D beating heart' },
-        // FIXED ALGEBRA IMAGE (reliable)
-        { name: 'Algebra Graph Explorer', file: 'algebra.html', img: 'https://images.pexels.com/photos/3747463/pexels-photo-3747463.jpeg?auto=compress&cs=tinysrgb&w=400', desc: 'Plot equations' }
+        { name: 'Fractions Visualizer', file: 'fractions.html', img: 'https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=400', desc: 'See fractions come alive' },
+        { name: 'Pythagoras Theorem', file: 'pythagoras.html', img: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400', desc: 'Interactive proof' },
+        { name: 'Solar System 3D', file: 'solar-system.html', img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', desc: 'Orbit and gravity' },
+        { name: 'States of Matter', file: 'states-of-matter.html', img: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400', desc: 'Solid, liquid, gas' },
+        { name: 'Electricity Flow', file: 'electricity.html', img: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400', desc: 'Circuits & current' },
+        { name: 'Geometry Builder', file: 'geometry.html', img: 'https://images.unsplash.com/photo-1635107510862-53886e926b74?w=400', desc: 'Construct 2D/3D' },
+        { name: 'Trigonometry Unit Circle', file: 'trigonometry.html', img: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400', desc: 'Sin, cos, tan' },
+        { name: 'Force & Motion Lab', file: 'force-motion.html', img: 'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=400', desc: 'Newton\'s laws' },
+        { name: 'Human Heart Animation', file: 'heart.html', img: 'https://images.unsplash.com/photo-1579154336196-0d9a9e3a78f3?w=400', desc: '3D beating heart' },
+        { name: 'Algebra Graph Explorer', file: 'algebra.html', img: 'https://images.unsplash.com/photo-1549421263-606ec3c5acb2?w=400', desc: 'Plot equations' }
       ];
       concepts.forEach(c => {
         let a = document.createElement('a');
         a.className = 'lab-item';
-        a.href = 'concepts/' + c.file;
-        a.target = '_blank';
-        a.innerHTML = `<img src="${c.img}" alt="${c.name}" loading="lazy"><h4>${c.name}</h4><p>${c.desc}</p>`;
+        a.href = 'concepts/' + c.file;   // e.g. concepts/fractions.html
+        a.target = '_blank'; // open in new tab (optional but good for demos)
+        a.innerHTML = `<img src="${c.img}" alt="${c.name}"><h4>${c.name}</h4><p>${c.desc}</p>`;
+        // optional click tracking but keep hyperlink
+        a.addEventListener('click', function(e) {
+          // let the href work normally; we just optionally track
+          console.log('navigating to ' + a.href);
+        });
         lab.appendChild(a);
       });
 
-      // GALLERY (unchanged)
+      // ---------- GALLERY ----------
       const gallery = document.getElementById('galleryGrid');
       const images = [
         'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400',
@@ -465,6 +486,8 @@ Address: E Block Sahajanand Helenium, Opp Aradhya Homes, B/H Satyamev Hospital Z
         gallery.appendChild(div);
       });
 
+      // ---------- DEMO SPACE ALREADY HARDCODED with <a href="concepts/demo.html"> ----------
+      // no extra code needed
     })();
   </script>
   <style>
